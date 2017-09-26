@@ -2,6 +2,7 @@ var canReflect = require('can-reflect');
 var canBatch = require('can-event/batch/batch');
 var Observation = require('can-observation');
 var CID = require('can-cid');
+var ns = require('can-namespace');
 
 /**
  * @module {function} can-simple-observable
@@ -38,7 +39,7 @@ var CID = require('can-cid');
  *  canReflect.offValue(obs, handler);
  * ```
  */
-module.exports = function reflectiveValue(initialValue) {
+module.exports = ns.simpleObservable = function simpleObservable(initialValue) {
 	var value = initialValue;
 	var handlers = [];
 
