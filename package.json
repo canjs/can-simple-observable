@@ -39,6 +39,7 @@
   "dependencies": {
     "can-cid": "^1.0.3",
     "can-event": "^3.7.4",
+    "can-namespace": "1.0.0",
     "can-observation": "^3.3.5",
     "can-reflect": "^1.4.1"
   },
