@@ -38,7 +38,8 @@ var CID = require('can-cid');
  *  canReflect.offValue(obs, handler);
  * ```
  */
-module.exports = function reflectiveValue(value) {
+module.exports = function reflectiveValue(initialValue) {
+	var value = initialValue;
 	var handlers = [];
 
 	var fn = function(newValue) {
