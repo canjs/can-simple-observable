@@ -9,20 +9,20 @@ var queues = require("can-queues");
  * @package ./package.json
  * @description Create an observable value.
  *
- * @signature `observable(initialValue)`
+ * @signature `new SimpleObservable(initialValue)`
  *
  * Creates an observable value that can be read, written, and observed using [can-reflect].
  *
  * @param {*} initialValue The initial value of the observable.
  *
- * @return {can-simple-observable} The observable.
+ * @return {can-simple-observable} An observable instance
  *
  * @body
  *
  * ## Use
  *
  * ```js
- *  var obs = observable('one');
+ *  var obs = new SimpleObservable('one');
  *
  *  canReflect.getValue(obs); // -> "one"
  *
