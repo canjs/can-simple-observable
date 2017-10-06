@@ -3,6 +3,9 @@ var SimpleObservable = require('can-simple-observable');
 var canReflect = require('can-reflect');
 var ObservationRecorder = require("can-observation-recorder");
 
+require("./settable/settable-test");
+require("./async/async-test");
+
 QUnit.module('can-simple-observable');
 
 QUnit.test('basics', function(){
