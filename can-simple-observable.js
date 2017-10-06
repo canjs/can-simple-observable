@@ -1,9 +1,8 @@
 var canReflect = require('can-reflect');
-var canBatch = require('can-event/batch/batch');
-var Observation = require('can-observation');
-var CID = require('can-cid');
+var ObservationRecorder = require('can-observation-recorder');
 var ns = require('can-namespace');
-
+var KeyTree = require('can-key-tree');
+var queues = require("can-queues");
 /**
  * @module {function} can-simple-observable
  * @parent can-infrastructure
@@ -39,39 +38,39 @@ var ns = require('can-namespace');
  *  canReflect.offValue(obs, handler);
  * ```
  */
-module.exports = ns.simpleObservable = function simpleObservable(initialValue) {
-	var value = initialValue;
-	var handlers = [];
-
-	var fn = function(newValue) {
-		if(arguments.length) {
-			value = newValue;
-			handlers.forEach(function(handler) {
-				canBatch.queue([handler, fn, [newValue]]);
-			}, this);
-		} else {
-			Observation.add(fn);
-			return value;
-		}
-	};
-
-	CID(fn);
-
-	canReflect.assignSymbols(fn, {
-		'can.onValue': function(handler) {
-			handlers.push(handler);
-		},
-		'can.offValue': function(handler) {
-			var index = handlers.indexOf(handler);
-			handlers.splice(index, 1);
-		},
-		'can.setValue': function(newValue) {
-			return fn(newValue);
-		},
-		'can.getValue': function() {
-			return fn();
-		}
-	});
-
-	return fn;
+function SimpleObservable(initialValue) {
+	// Store handlers by queue
+	this.handlers = new KeyTree([Object, Array]);
+	this.value = initialValue;
+}
+SimpleObservable.prototype = {
+	constructor: SimpleObservable,
+	get: function(){
+		ObservationRecorder.add(this);
+		return this.value;
+	},
+	set: function(value){
+		var old = this.value;
+		this.value = value;
+		// adds callback handlers to be called w/i their respective queue.
+		queues.enqueueByQueue(this.handlers.getNode([]), this, [value, old], function(){
+			return {};
+		});
+	},
+	// .on( handler(newValue,oldValue), queue="mutate")
+	on: function(handler, queue){
+		this.handlers.add([queue|| "mutate", handler]);
+	},
+	off: function(handler, queue){
+		this.handlers.delete([queue|| "mutate", handler]);
+	}
 };
+
+canReflect.assignSymbols(SimpleObservable.prototype,{
+	"can.getValue": SimpleObservable.prototype.get,
+	"can.setValue": SimpleObservable.prototype.set,
+	"can.onValue": SimpleObservable.prototype.on,
+	"can.offValue": SimpleObservable.prototype.off
+});
+
+module.exports = ns.SimpleObservable = SimpleObservable;
