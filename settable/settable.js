@@ -69,7 +69,8 @@ canReflect.assignSymbols(SettableObservable.prototype, {
 	"can.getValue": SettableObservable.prototype.get,
 	"can.setValue": SettableObservable.prototype.set,
 	"can.onValue": SettableObservable.prototype.on,
-	"can.offValue": SettableObservable.prototype.off
+	"can.offValue": SettableObservable.prototype.off,
+	"can.isMapLike": false
 });
 
 module.exports = SettableObservable;

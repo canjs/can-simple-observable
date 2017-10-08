@@ -77,7 +77,8 @@ canReflect.assignSymbols(AsyncObservable.prototype, {
 	"can.getValue": AsyncObservable.prototype.get,
 	"can.setValue": AsyncObservable.prototype.set,
 	"can.onValue": AsyncObservable.prototype.on,
-	"can.offValue": AsyncObservable.prototype.off
+	"can.offValue": AsyncObservable.prototype.off,
+	"can.isMapLike": false
 });
 
 module.exports = AsyncObservable;

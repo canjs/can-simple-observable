@@ -70,7 +70,8 @@ canReflect.assignSymbols(SimpleObservable.prototype,{
 	"can.getValue": SimpleObservable.prototype.get,
 	"can.setValue": SimpleObservable.prototype.set,
 	"can.onValue": SimpleObservable.prototype.on,
-	"can.offValue": SimpleObservable.prototype.off
+	"can.offValue": SimpleObservable.prototype.off,
+	"can.isMapLike": false
 });
 
 module.exports = ns.SimpleObservable = SimpleObservable;
