@@ -40,8 +40,8 @@
     "can-key-tree": "0.X",
     "can-namespace": "1.0.0",
     "can-observation": "^4.0.0-pre.1",
-    "can-observation-recorder": "0.X",
-    "can-queues": "^0.1.1",
+    "can-observation-recorder": "<2.0.0",
+    "can-queues": "<2.0.0",
     "can-reflect": "^1.4.1"
   },
   "devDependencies": {
