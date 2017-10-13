@@ -5,6 +5,7 @@ var ObservationRecorder = require("can-observation-recorder");
 
 require("./settable/settable-test");
 require("./async/async-test");
+require("./setter/setter-test");
 
 QUnit.module('can-simple-observable');
 
