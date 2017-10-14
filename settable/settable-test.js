@@ -42,3 +42,17 @@ QUnit.test('basics', function(){
     QUnit.equal( canReflect.getValue(obs), 15, "after unbound");
 
 });
+
+QUnit.test("get and set Priority", function(){
+    var value = new SimpleObservable(2);
+
+
+    var obs = new SettableObservable(function(lastSet){
+        return lastSet * value.get();
+    }, null, 1);
+
+    canReflect.setPriority(obs, 5);
+
+
+    QUnit.equal(canReflect.getPriority(obs), 5, "set priority");
+});

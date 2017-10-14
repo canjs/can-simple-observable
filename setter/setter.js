@@ -6,6 +6,8 @@ var KeyTree = require('can-key-tree');
 var queues = require("can-queues");
 var SettableObservable = require("../settable/settable");
 
+// SetterObservable's call a function when set. Their getter is backed up by an
+// observation.
 function SetterObservable(getter, setter) {
 	this.handlers = new KeyTree([Object, Array], {
 		onFirst: this.setup.bind(this),

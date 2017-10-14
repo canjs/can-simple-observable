@@ -24,3 +24,18 @@ QUnit.test('basics', function(){
     QUnit.equal(canReflect.getValue(value), 3, 'value set');
     QUnit.equal(canReflect.getValue(obs), 3, 'getValue unbound');
 });
+
+QUnit.test("get and set Priority", function(){
+    var value = new SimpleObservable(2);
+
+    var obs = new SetterObservable(function(){
+        return value.get();
+    }, function(newVal){
+        value.set(newVal);
+    });
+
+    canReflect.setPriority(obs, 5);
+
+
+    QUnit.equal(canReflect.getPriority(obs), 5, "set priority");
+});

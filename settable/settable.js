@@ -5,7 +5,13 @@ var Observation = require("can-observation");
 var KeyTree = require('can-key-tree');
 var queues = require("can-queues");
 
-
+// This supports an "internal" settable value that the `fn` can derive its value from.
+// It's useful to `can-define`.
+// ```
+// new SettableObservable(function(lastSet){
+//   return lastSet * 5;
+// }, null, 5)
+// ```
 function SettableObservable(fn, context, initialValue) {
 	this.handlers = new KeyTree([Object, Array], {
 		onFirst: this.setup.bind(this),
@@ -70,7 +76,13 @@ canReflect.assignSymbols(SettableObservable.prototype, {
 	"can.setValue": SettableObservable.prototype.set,
 	"can.onValue": SettableObservable.prototype.on,
 	"can.offValue": SettableObservable.prototype.off,
-	"can.isMapLike": false
+	"can.isMapLike": false,
+	"can.getPriority": function(){
+		return canReflect.getPriority( this.observation );
+	},
+	"can.setPriority": function(newPriority){
+		canReflect.setPriority( this.observation, newPriority );
+	}
 });
 
 module.exports = SettableObservable;

@@ -78,7 +78,13 @@ canReflect.assignSymbols(AsyncObservable.prototype, {
 	"can.setValue": AsyncObservable.prototype.set,
 	"can.onValue": AsyncObservable.prototype.on,
 	"can.offValue": AsyncObservable.prototype.off,
-	"can.isMapLike": false
+	"can.isMapLike": false,
+	"can.getPriority": function(){
+		return canReflect.getPriority( this.observation );
+	},
+	"can.setPriority": function(newPriority){
+		canReflect.setPriority( this.observation, newPriority );
+	}
 });
 
 module.exports = AsyncObservable;

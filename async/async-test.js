@@ -36,7 +36,7 @@ QUnit.test('basics', function(assert){
     QUnit.ok(!dependencies.valueDependencies.has(value), "did not record value");
     QUnit.ok(dependencies.valueDependencies.has(obs), "did record observable");
     QUnit.equal(dependencies.valueDependencies.size, 1, "only one value to listen to");
-    
+
     var changes = 0;
     var handler = function(newValue) {
         changes++;
@@ -50,19 +50,28 @@ QUnit.test('basics', function(assert){
     };
     canReflect.onValue(obs, handler);
 
-    /*
-    canReflect.setValue(obs, 'two');
-    ObservationRecorder.start();
-    QUnit.equal(canReflect.getValue(obs), 'two', 'setValue');
-    var dependencies = ObservationRecorder.stop();
-    QUnit.ok(dependencies.valueDependencies.has(obs), "was recorded");
+});
 
 
+QUnit.test("get and set Priority", function(){
+    var value = new SimpleObservable(1);
 
-    canReflect.setValue(obs, 'three');
+    var obs = new AsyncObservable(function(lastSet, resolve){
+        if(!resolve) {
+            return "default";
+        }
+        if(value.get() === 1) {
+            setTimeout(function(){
+                resolve("a");
+            }, 1);
+        } else {
+            setTimeout(function(){
+                resolve("b");
+            }, 1);
+        }
+    });
 
-    canReflect.offValue(obs, handler);
-    canReflect.setValue(obs, 'four');
+    canReflect.setPriority(obs, 5);
 
-    QUnit.equal(canReflect.getValue(obs), 'four', 'getValue after offValue');*/
+    QUnit.equal(canReflect.getPriority(obs), 5, "set priority");
 });
