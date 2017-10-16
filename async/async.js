@@ -5,7 +5,8 @@ var Observation = require("can-observation");
 var KeyTree = require('can-key-tree');
 var queues = require("can-queues");
 
-
+// This is an observable that is like `settable`, but passed a `resolve`
+// function that can resolve the value of this observable late.
 function AsyncObservable(fn, context, initialValue) {
 	this.handlers = new KeyTree([Object, Array], {
 		onFirst: this.setup.bind(this),
@@ -84,6 +85,9 @@ canReflect.assignSymbols(AsyncObservable.prototype, {
 	},
 	"can.setPriority": function(newPriority){
 		canReflect.setPriority( this.observation, newPriority );
+	},
+	"can.valueHasDependencies": function(){
+		return canReflect.valueHasDependencies( this.observation );
 	}
 });
 

@@ -82,6 +82,9 @@ canReflect.assignSymbols(SettableObservable.prototype, {
 	},
 	"can.setPriority": function(newPriority){
 		canReflect.setPriority( this.observation, newPriority );
+	},
+	"can.valueHasDependencies": function(){
+		return canReflect.valueHasDependencies( this.observation );
 	}
 });
 
