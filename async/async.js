@@ -4,6 +4,7 @@ var SimpleObservable = require("../can-simple-observable");
 var Observation = require("can-observation");
 var KeyTree = require('can-key-tree');
 var queues = require("can-queues");
+var SettableObservable = require("../settable/settable");
 
 // This is an observable that is like `settable`, but passed a `resolve`
 // function that can resolve the value of this observable late.
@@ -19,77 +20,15 @@ function AsyncObservable(fn, context, initialValue) {
 	}, this);
 	this.handler = this.handler.bind(this);
 }
-
-AsyncObservable.prototype = {
-	handler: function(newVal) {
-		if (newVal !== undefined) {
-			var old = this.value;
-			this.value = newVal;
-			// adds callback handlers to be called w/i their respective queue.
-			queues.enqueueByQueue(this.handlers.getNode([]), this, [newVal, old], function() {
-				return {};
-			});
-		}
-	},
-	setup: function() {
-		this.bound = true;
-		canReflect.onValue(this.observation, this.handler, "notify");
-	},
-	teardown: function() {
-		this.bound = false;
-		canReflect.offValue(this.observation, this.handler, "notify");
-	},
-	resolve: function(newVal) {
-		var old = this.value;
-		this.value = newVal;
-		// adds callback handlers to be called w/i their respective queue.
-		queues.enqueueByQueue(this.handlers.getNode([]), this, [newVal, old], function() {
-			return {};
-		});
-	},
-	set: function(newVal) {
-		if (newVal !== this.lastSetValue.get()) {
-			this.lastSetValue.set(newVal);
-		}
-	},
-	get: function() {
-		if (ObservationRecorder.isRecording()) {
-			ObservationRecorder.add(this);
-			if (!this.bound) {
-				Observation.temporarilyBind(this);
-			}
-		}
-
-		if (this.bound === true) {
-			return this.value;
-		} else {
-			return this.observation.get();
-		}
-	},
-	on: function(handler, queue) {
-		this.handlers.add([queue || "mutate", handler]);
-	},
-	off: function(handler, queue) {
-		this.handlers.delete([queue || "mutate", handler]);
-	},
-	hasDependencies: function(){
-		return canReflect.valueHasDependencies( this.observation );
-	}
+AsyncObservable.prototype = Object.create(SettableObservable.prototype);
+AsyncObservable.prototype.resolve = function resolve(newVal) {
+	var old = this.value;
+	this.value = newVal;
+	// adds callback handlers to be called w/i their respective queue.
+	queues.enqueueByQueue(this.handlers.getNode([]), this, [newVal, old], function() {
+		return {};
+	});
 };
 
-canReflect.assignSymbols(AsyncObservable.prototype, {
-	"can.getValue": AsyncObservable.prototype.get,
-	"can.setValue": AsyncObservable.prototype.set,
-	"can.onValue": AsyncObservable.prototype.on,
-	"can.offValue": AsyncObservable.prototype.off,
-	"can.isMapLike": false,
-	"can.getPriority": function(){
-		return canReflect.getPriority( this.observation );
-	},
-	"can.setPriority": function(newPriority){
-		canReflect.setPriority( this.observation, newPriority );
-	},
-	"can.valueHasDependencies": AsyncObservable.prototype.hasDependencies
-});
 
 module.exports = AsyncObservable;

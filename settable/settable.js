@@ -57,7 +57,7 @@ SettableObservable.prototype = {
 			}
 		}
 
-		if (this.bound === true) {
+		if (this.bound === true && this.observation.hasDependencies()) {
 			return this.value;
 		} else {
 			return this.observation.get();
@@ -68,6 +68,9 @@ SettableObservable.prototype = {
 	},
 	off: function(handler, queue) {
 		this.handlers.delete([queue || "mutate", handler]);
+	},
+	hasDependencies: function(){
+		return canReflect.valueHasDependencies( this.observation );
 	}
 };
 
@@ -83,9 +86,7 @@ canReflect.assignSymbols(SettableObservable.prototype, {
 	"can.setPriority": function(newPriority){
 		canReflect.setPriority( this.observation, newPriority );
 	},
-	"can.valueHasDependencies": function(){
-		return canReflect.valueHasDependencies( this.observation );
-	}
+	"can.valueHasDependencies": SettableObservable.prototype.hasDependencies
 });
 
 module.exports = SettableObservable;

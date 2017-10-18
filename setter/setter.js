@@ -23,8 +23,12 @@ SetterObservable.prototype.constructor = SetterObservable;
 SetterObservable.prototype.set = function(newVal){
     this.setter(newVal);
 };
+SetterObservable.prototype.hasDependencies = function(){
+	return canReflect.valueHasDependencies( this.observation );
+};
 canReflect.assignSymbols(SetterObservable.prototype, {
-	"can.setValue": SetterObservable.prototype.set
+	"can.setValue": SetterObservable.prototype.set,
+	"can.valueHasDependencies": SetterObservable.prototype.hasDependencies
 });
 
 module.exports = SetterObservable;
