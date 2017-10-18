@@ -3,6 +3,13 @@ var ObservationRecorder = require('can-observation-recorder');
 var ns = require('can-namespace');
 var KeyTree = require('can-key-tree');
 var queues = require("can-queues");
+
+function makeMeta(handler, context, args) {
+	return {
+		log: [ canReflect.getName(handler), "called because", canReflect.getName(context), "changed to", JSON.stringify(args[0]), "from", JSON.stringify(args[1]) ],
+	};
+}
+
 /**
  * @module {function} can-simple-observable
  * @parent can-infrastructure
@@ -53,9 +60,7 @@ SimpleObservable.prototype = {
 		var old = this.value;
 		this.value = value;
 		// adds callback handlers to be called w/i their respective queue.
-		queues.enqueueByQueue(this.handlers.getNode([]), this, [value, old], function(){
-			return {};
-		});
+		queues.enqueueByQueue(this.handlers.getNode([]), this, [value, old], makeMeta);
 	},
 	// .on( handler(newValue,oldValue), queue="mutate")
 	on: function(handler, queue){
@@ -74,7 +79,13 @@ canReflect.assignSymbols(SimpleObservable.prototype,{
 	"can.isMapLike": false,
 	"can.valueHasDependencies": function(){
 		return true;
-	}
+	},
+
+	//!steal-remove-start
+	"can.getName": function() {
+		return canReflect.getName(this.constructor) + "<>";
+	},
+	//!steal-remove-end
 });
 
 module.exports = ns.SimpleObservable = SimpleObservable;
