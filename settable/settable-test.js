@@ -2,7 +2,6 @@ var QUnit = require('steal-qunit');
 var SettableObservable = require('./settable');
 var SimpleObservable = require('../can-simple-observable');
 var canReflect = require('can-reflect');
-var ObservationRecorder = require("can-observation-recorder");
 
 QUnit.module('can-simple-observable/settable');
 
@@ -55,4 +54,35 @@ QUnit.test("get and set Priority", function(){
 
 
     QUnit.equal(canReflect.getPriority(obs), 5, "set priority");
+});
+
+QUnit.test("log observable changes", function(assert) {
+	var done = assert.async();
+
+	var obs = new SettableObservable(function(lastSet) {
+		return lastSet * 5;
+	}, null, 1);
+
+	// turn on logging
+	obs.log();
+
+	// override internal _log to spy on arguments
+	var changes = [];
+	obs._log = function(previous, current) {
+		changes.push({ current: current,  previous: previous });
+	};
+
+	canReflect.onValue(obs, function() {}); // needs to be bound
+	canReflect.setValue(obs, 2);
+	canReflect.setValue(obs, 3);
+
+	assert.expect(1);
+	setTimeout(function() {
+		assert.deepEqual(
+			changes,
+			[{current: 10, previous: 5}, {current: 15, previous: 10}],
+			"should print out current/previous values"
+		);
+		done();
+	});
 });

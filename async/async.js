@@ -1,5 +1,3 @@
-var canReflect = require('can-reflect');
-var ObservationRecorder = require('can-observation-recorder');
 var SimpleObservable = require("../can-simple-observable");
 var Observation = require("can-observation");
 var KeyTree = require('can-key-tree');
@@ -21,9 +19,17 @@ function AsyncObservable(fn, context, initialValue) {
 	this.handler = this.handler.bind(this);
 }
 AsyncObservable.prototype = Object.create(SettableObservable.prototype);
+AsyncObservable.prototype.constructor = AsyncObservable;
 AsyncObservable.prototype.resolve = function resolve(newVal) {
 	var old = this.value;
 	this.value = newVal;
+
+	//!steal-remove-start
+	if (typeof this._log === "function") {
+		this._log(old, newVal);
+	}
+	//!steal-remove-end
+
 	// adds callback handlers to be called w/i their respective queue.
 	queues.enqueueByQueue(this.handlers.getNode([]), this, [newVal, old], function() {
 		return {};
