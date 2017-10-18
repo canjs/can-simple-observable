@@ -71,6 +71,9 @@ AsyncObservable.prototype = {
 	},
 	off: function(handler, queue) {
 		this.handlers.delete([queue || "mutate", handler]);
+	},
+	hasDependencies: function(){
+		return canReflect.valueHasDependencies( this.observation );
 	}
 };
 
@@ -86,9 +89,7 @@ canReflect.assignSymbols(AsyncObservable.prototype, {
 	"can.setPriority": function(newPriority){
 		canReflect.setPriority( this.observation, newPriority );
 	},
-	"can.valueHasDependencies": function(){
-		return canReflect.valueHasDependencies( this.observation );
-	}
+	"can.valueHasDependencies": AsyncObservable.prototype.hasDependencies
 });
 
 module.exports = AsyncObservable;
