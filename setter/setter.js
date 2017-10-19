@@ -1,9 +1,6 @@
 var canReflect = require('can-reflect');
-var ObservationRecorder = require('can-observation-recorder');
-var SimpleObservable = require("../can-simple-observable");
 var Observation = require("can-observation");
 var KeyTree = require('can-key-tree');
-var queues = require("can-queues");
 var SettableObservable = require("../settable/settable");
 
 // SetterObservable's call a function when set. Their getter is backed up by an
@@ -13,7 +10,7 @@ function SetterObservable(getter, setter) {
 		onFirst: this.setup.bind(this),
 		onEmpty: this.teardown.bind(this)
 	});
-    this.setter = setter;
+	this.setter = setter;
 	this.observation = new Observation(getter);
 	this.handler = this.handler.bind(this);
 
