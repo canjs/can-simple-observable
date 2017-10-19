@@ -15,7 +15,21 @@ function SetterObservable(getter, setter) {
 	});
     this.setter = setter;
 	this.observation = new Observation(getter);
+
+	//!steal-remove-start
+	canReflect.assignSymbols(this, {
+		"can.getName": function() {
+			return canReflect.getName(this.constructor) + "<" + canReflect.getName(getter), ", " + canReflect.getName(setter) + ">";
+		},
+	});
+	//!steal-remove-end
+
 	this.handler = this.handler.bind(this);
+	//!steal-remove-start
+	Object.defineProperty(this.handler, "name", {
+		value: canReflect.getName(this) + ".handler",
+	});
+	//!steal-remove-end
 }
 
 SetterObservable.prototype = Object.create(SettableObservable.prototype);

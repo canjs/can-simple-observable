@@ -15,10 +15,32 @@ function AsyncObservable(fn, context, initialValue) {
 	});
 	this.resolve = this.resolve.bind(this);
 	this.lastSetValue = new SimpleObservable(initialValue);
-	this.observation = new Observation(function() {
-		return fn.call(context, this.lastSetValue.get(), this.bound === true ? this.resolve : undefined);
-	}, this);
+
+	//!steal-remove-start
+	canReflect.assignSymbols(this, {
+		"can.getName": function() {
+			return canReflect.getName(this.constructor) + "<" + canReflect.getName(fn) + ">";
+		},
+	});
+	//!steal-remove-end
+
 	this.handler = this.handler.bind(this);
+	//!steal-remove-start
+	Object.defineProperty(this.handler, "name", {
+		value: canReflect.getName(this) + ".handler",
+	});
+	//!steal-remove-end
+
+	function observe() {
+		return fn.call(context, this.lastSetValue.get(), this.bound === true ? this.resolve : undefined);
+	}
+	//!steal-remove-start
+	Object.defineProperty(observe, "name", {
+		value: canReflect.getName(this),
+	});
+	//!steal-remove-end
+
+	this.observation = new Observation(observe, this);
 }
 AsyncObservable.prototype = Object.create(SettableObservable.prototype);
 AsyncObservable.prototype.resolve = function resolve(newVal) {

@@ -18,10 +18,32 @@ function SettableObservable(fn, context, initialValue) {
 		onEmpty: this.teardown.bind(this)
 	});
 	this.lastSetValue = new SimpleObservable(initialValue);
-	this.observation = new Observation(function() {
-		return fn.call(context, this.lastSetValue.get());
-	}, this);
+
+	//!steal-remove-start
+	canReflect.assignSymbols(this, {
+		"can.getName": function() {
+			return canReflect.getName(this.constructor) + "<" + canReflect.getName(fn) + ">";
+		},
+	});
+	//!steal-remove-end
+
 	this.handler = this.handler.bind(this);
+	//!steal-remove-start
+	Object.defineProperty(this.handler, "name", {
+		value: canReflect.getName(this) + ".handler",
+	});
+	//!steal-remove-end
+
+	function observe() {
+		return fn.call(context, this.lastSetValue.get());
+	}
+	//!steal-remove-start
+	Object.defineProperty(observe, "name", {
+		value: canReflect.getName(this),
+	});
+	//!steal-remove-end
+
+	this.observation = new Observation(observe, this);
 }
 var peek = ObservationRecorder.ignore(canReflect.getValue.bind(canReflect));
 
@@ -86,7 +108,7 @@ canReflect.assignSymbols(SettableObservable.prototype, {
 	"can.setPriority": function(newPriority){
 		canReflect.setPriority( this.observation, newPriority );
 	},
-	"can.valueHasDependencies": SettableObservable.prototype.hasDependencies
+	"can.valueHasDependencies": SettableObservable.prototype.hasDependencies,
 });
 
 module.exports = SettableObservable;

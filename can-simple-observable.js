@@ -83,7 +83,15 @@ canReflect.assignSymbols(SimpleObservable.prototype,{
 
 	//!steal-remove-start
 	"can.getName": function() {
-		return canReflect.getName(this.constructor) + "<>";
+		var value = this.value;
+		if (typeof value !== 'object' || value === null) {
+			value = JSON.stringify(value);
+		}
+		else {
+			value = '';
+		}
+
+		return canReflect.getName(this.constructor) + "<" + value + ">";
 	},
 	//!steal-remove-end
 });
