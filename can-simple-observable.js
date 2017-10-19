@@ -3,6 +3,7 @@ var ObservationRecorder = require('can-observation-recorder');
 var ns = require('can-namespace');
 var KeyTree = require('can-key-tree');
 var queues = require("can-queues");
+var log = require("./log");
 
 function makeMeta(handler, context, args) {
 	return {
@@ -61,6 +62,11 @@ SimpleObservable.prototype = {
 		this.value = value;
 		// adds callback handlers to be called w/i their respective queue.
 		queues.enqueueByQueue(this.handlers.getNode([]), this, [value, old], makeMeta);
+		//!steal-remove-start
+		if (typeof this._log === "function") {
+			this._log(old, value);
+		}
+		//!steal-remove-end
 	},
 	// .on( handler(newValue,oldValue), queue="mutate")
 	on: function(handler, queue){
@@ -68,7 +74,8 @@ SimpleObservable.prototype = {
 	},
 	off: function(handler, queue){
 		this.handlers.delete([queue|| "mutate", handler]);
-	}
+	},
+	log: log
 };
 
 canReflect.assignSymbols(SimpleObservable.prototype,{

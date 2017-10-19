@@ -4,6 +4,7 @@ var SimpleObservable = require("../can-simple-observable");
 var Observation = require("can-observation");
 var KeyTree = require('can-key-tree');
 var queues = require("can-queues");
+var log = require("../log");
 
 // This supports an "internal" settable value that the `fn` can derive its value from.
 // It's useful to `can-define`.
@@ -52,6 +53,13 @@ SettableObservable.prototype = {
 	handler: function(newVal) {
 		var old = this.value;
 		this.value = newVal;
+
+		//!steal-remove-start
+		if (typeof this._log === "function") {
+			this._log(old, newVal);
+		}
+		//!steal-remove-end
+
 		// adds callback handlers to be called w/i their respective queue.
 		queues.enqueueByQueue(this.handlers.getNode([]), this, [newVal, old], function() {
 			return {};
@@ -93,8 +101,14 @@ SettableObservable.prototype = {
 	},
 	hasDependencies: function(){
 		return canReflect.valueHasDependencies( this.observation );
-	}
+	},
+	// call `obs.log()` to log observable changes to the browser console
+	// The observable has to be bound for `.log` to be called
+	log: log
 };
+
+// fix the constructor reference
+SettableObservable.prototype.constructor = SettableObservable;
 
 canReflect.assignSymbols(SettableObservable.prototype, {
 	"can.getValue": SettableObservable.prototype.get,

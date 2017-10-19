@@ -75,3 +75,44 @@ QUnit.test("get and set Priority", function(){
 
     QUnit.equal(canReflect.getPriority(obs), 5, "set priority");
 });
+
+QUnit.test("log async observable changes", function(assert) {
+	var done = assert.async();
+	var value = new SimpleObservable(1);
+
+	var obs = new AsyncObservable(function(lastSet, resolve) {
+		if (value.get() === 1) {
+			setTimeout(function(){
+				resolve("b");
+			}, 1);
+		} else {
+			setTimeout(function(){
+				resolve("c");
+			}, 1);
+		}
+	}, null, "a");
+
+	// turn on logging
+	obs.log();
+
+	// override the internal _log to spy on arguments
+	var changes = [];
+	obs._log = function(previous, current) {
+		changes.push({ previous: previous, current: current });
+	};
+
+	// make sure the observable is bound
+	canReflect.onValue(obs, function() {});
+
+	// trigger observation changes
+	value.set("2");
+
+	assert.expect(1);
+	setTimeout(function() {
+		assert.deepEqual(changes, [
+			{ current: "b", previous: undefined },
+			{ current: "c", previous: "b" },
+		]);
+		done();
+	}, 10);
+});
