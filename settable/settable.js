@@ -18,6 +18,10 @@ function SettableObservable(fn, context, initialValue) {
 		onEmpty: this.teardown.bind(this)
 	});
 	this.lastSetValue = new SimpleObservable(initialValue);
+	function observe() {
+		return fn.call(context, this.lastSetValue.get());
+	}
+	this.handler = this.handler.bind(this);
 
 	//!steal-remove-start
 	canReflect.assignSymbols(this, {
@@ -25,21 +29,11 @@ function SettableObservable(fn, context, initialValue) {
 			return canReflect.getName(this.constructor) + "<" + canReflect.getName(fn) + ">";
 		},
 	});
-	//!steal-remove-end
-
-	this.handler = this.handler.bind(this);
-	//!steal-remove-start
 	Object.defineProperty(this.handler, "name", {
 		value: canReflect.getName(this) + ".handler",
 	});
-	//!steal-remove-end
-
-	function observe() {
-		return fn.call(context, this.lastSetValue.get());
-	}
-	//!steal-remove-start
 	Object.defineProperty(observe, "name", {
-		value: canReflect.getName(this),
+		value: canReflect.getName(fn)+"::"+canReflect.getName(this.constructor),
 	});
 	//!steal-remove-end
 

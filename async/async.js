@@ -15,6 +15,12 @@ function AsyncObservable(fn, context, initialValue) {
 	});
 	this.resolve = this.resolve.bind(this);
 	this.lastSetValue = new SimpleObservable(initialValue);
+	this.handler = this.handler.bind(this);
+
+	function observe() {
+		this.resolveCalled = false;
+		return fn.call(context, this.lastSetValue.get(), this.bound === true ? this.resolve : undefined);
+	}
 
 	//!steal-remove-start
 	canReflect.assignSymbols(this, {
@@ -22,28 +28,36 @@ function AsyncObservable(fn, context, initialValue) {
 			return canReflect.getName(this.constructor) + "<" + canReflect.getName(fn) + ">";
 		},
 	});
-	//!steal-remove-end
-
-	this.handler = this.handler.bind(this);
-	//!steal-remove-start
 	Object.defineProperty(this.handler, "name", {
 		value: canReflect.getName(this) + ".handler",
 	});
-	//!steal-remove-end
-
-	function observe() {
-		return fn.call(context, this.lastSetValue.get(), this.bound === true ? this.resolve : undefined);
-	}
-	//!steal-remove-start
 	Object.defineProperty(observe, "name", {
-		value: canReflect.getName(this),
+		value: canReflect.getName(fn)+"::"+canReflect.getName(this.constructor),
 	});
 	//!steal-remove-end
 
 	this.observation = new Observation(observe, this);
 }
 AsyncObservable.prototype = Object.create(SettableObservable.prototype);
+AsyncObservable.prototype.constructor = AsyncObservable;
+
+AsyncObservable.prototype.handler = function(newVal) {
+	if (newVal !== undefined) {
+		SettableObservable.prototype.handler.apply(this, arguments);
+	}
+};
+
+var peek = ObservationRecorder.ignore(canReflect.getValue.bind(canReflect));
+AsyncObservable.prototype.setup = function() {
+	this.bound = true;
+	canReflect.onValue(this.observation, this.handler, "notify");
+	if(!this.resolveCalled) {
+		this.value = peek(this.observation);
+	}
+};
+
 AsyncObservable.prototype.resolve = function resolve(newVal) {
+	this.resolveCalled = true;
 	var old = this.value;
 	this.value = newVal;
 	// adds callback handlers to be called w/i their respective queue.
