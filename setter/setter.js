@@ -17,7 +17,7 @@ function SetterObservable(getter, setter) {
 	//!steal-remove-start
 	canReflect.assignSymbols(this, {
 		"can.getName": function() {
-			return canReflect.getName(this.constructor) + "<" + canReflect.getName(getter), ", " + canReflect.getName(setter) + ">";
+			return canReflect.getName(this.constructor) + "<" + canReflect.getName(getter) + ">";
 		},
 	});
 	Object.defineProperty(this.handler, "name", {
