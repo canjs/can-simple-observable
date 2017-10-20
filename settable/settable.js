@@ -81,7 +81,7 @@ SettableObservable.prototype = {
 			}
 		}
 
-		if (this.bound === true && this.observation.hasDependencies()) {
+		if (this.bound === true) {
 			return this.value;
 		} else {
 			return this.observation.get();
