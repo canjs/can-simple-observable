@@ -5,12 +5,6 @@ var KeyTree = require('can-key-tree');
 var queues = require("can-queues");
 var log = require("./log");
 
-function makeMeta(handler, context, args) {
-	return {
-		log: [ canReflect.getName(handler), "called because", canReflect.getName(context), "changed to", args[0], "from", args[1] ],
-	};
-}
-
 /**
  * @module {function} can-simple-observable
  * @parent can-infrastructure
@@ -61,7 +55,14 @@ SimpleObservable.prototype = {
 		var old = this.value;
 		this.value = value;
 		// adds callback handlers to be called w/i their respective queue.
-		queues.enqueueByQueue(this.handlers.getNode([]), this, [value, old], makeMeta);
+		queues.enqueueByQueue(this.handlers.getNode([]), this, [value, old]
+			//!steal-remove-start
+			/* jshint laxcomma: true */
+			, null
+			, [ canReflect.getName(this), "changed to", value, "from", old ]
+			/* jshint laxcomma: false */
+			//!steal-remove-end
+		);
 		//!steal-remove-start
 		if (typeof this._log === "function") {
 			this._log(old, value);
