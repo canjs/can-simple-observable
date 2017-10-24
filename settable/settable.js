@@ -96,6 +96,9 @@ SettableObservable.prototype = {
 	hasDependencies: function(){
 		return canReflect.valueHasDependencies( this.observation );
 	},
+	getValueDependencies: function() {
+		return canReflect.getValueDependencies(this.observation);
+	},
 	// call `obs.log()` to log observable changes to the browser console
 	// The observable has to be bound for `.log` to be called
 	log: log
@@ -117,6 +120,7 @@ canReflect.assignSymbols(SettableObservable.prototype, {
 		canReflect.setPriority( this.observation, newPriority );
 	},
 	"can.valueHasDependencies": SettableObservable.prototype.hasDependencies,
+	"can.getValueDependencies": SettableObservable.prototype.getValueDependencies
 });
 
 module.exports = SettableObservable;
