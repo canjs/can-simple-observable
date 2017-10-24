@@ -86,3 +86,26 @@ QUnit.test("log observable changes", function(assert) {
 		done();
 	});
 });
+
+QUnit.test("getValueDependencies", function(assert) {
+	var value = new SimpleObservable(2);
+
+	var obs = new SettableObservable(function(lastSet) {
+		return lastSet * value.get();
+	}, null, 1);
+
+	// unbound
+	assert.equal(
+		typeof canReflect.getValueDependencies(obs),
+		"undefined",
+		"returns undefined when the observable is unbound"
+	);
+
+	// bound
+	canReflect.onValue(obs, function() {});
+	assert.deepEqual(
+		canReflect.getValueDependencies(obs).valueDependencies,
+		new Set([obs.lastSetValue, value]),
+		"should return the internal observation dependencies"
+	);
+});
