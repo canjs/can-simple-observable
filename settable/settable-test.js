@@ -56,33 +56,35 @@ QUnit.test("get and set Priority", function(){
     QUnit.equal(canReflect.getPriority(obs), 5, "set priority");
 });
 
-QUnit.test("log observable changes", function(assert) {
-	var done = assert.async();
+if(System.env.indexOf("production") < 0) {
+    QUnit.test("log observable changes", function(assert) {
+    	var done = assert.async();
 
-	var obs = new SettableObservable(function(lastSet) {
-		return lastSet * 5;
-	}, null, 1);
+    	var obs = new SettableObservable(function(lastSet) {
+    		return lastSet * 5;
+    	}, null, 1);
 
-	// turn on logging
-	obs.log();
+    	// turn on logging
+    	obs.log();
 
-	// override internal _log to spy on arguments
-	var changes = [];
-	obs._log = function(previous, current) {
-		changes.push({ current: current,  previous: previous });
-	};
+    	// override internal _log to spy on arguments
+    	var changes = [];
+    	obs._log = function(previous, current) {
+    		changes.push({ current: current,  previous: previous });
+    	};
 
-	canReflect.onValue(obs, function() {}); // needs to be bound
-	canReflect.setValue(obs, 2);
-	canReflect.setValue(obs, 3);
+    	canReflect.onValue(obs, function() {}); // needs to be bound
+    	canReflect.setValue(obs, 2);
+    	canReflect.setValue(obs, 3);
 
-	assert.expect(1);
-	setTimeout(function() {
-		assert.deepEqual(
-			changes,
-			[{current: 10, previous: 5}, {current: 15, previous: 10}],
-			"should print out current/previous values"
-		);
-		done();
-	});
-});
+    	assert.expect(1);
+    	setTimeout(function() {
+    		assert.deepEqual(
+    			changes,
+    			[{current: 10, previous: 5}, {current: 15, previous: 10}],
+    			"should print out current/previous values"
+    		);
+    		done();
+    	});
+    });
+}
