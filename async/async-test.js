@@ -108,6 +108,7 @@ QUnit.test("prevent a getter returning undefined from overwriting last resolved 
     QUnit.equal( obs.get(), 4 );
 
 });
+
 if(System.env.indexOf("production") < 0) {
     QUnit.test("log async observable changes", function(assert) {
     	var done = assert.async();
@@ -150,3 +151,25 @@ if(System.env.indexOf("production") < 0) {
     	}, 10);
     });
 }
+
+QUnit.test("getValueDependencies", function(assert) {
+	var value = new SimpleObservable(1);
+
+	var obs = new AsyncObservable(function(lastSet, resolve){
+		return value.get() === 1 ? lastSet : resolve(4);
+	});
+
+	// unbound
+	assert.equal(
+		typeof canReflect.getValueDependencies(obs),
+		"undefined",
+		"should be undefined when observable is unbound"
+	);
+
+	// bound
+	canReflect.onValue(obs, function() {});
+	assert.deepEqual(
+		canReflect.getValueDependencies(obs).valueDependencies,
+		new Set([obs.lastSetValue, value])
+	);
+});

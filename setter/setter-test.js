@@ -5,10 +5,8 @@ var canReflect = require('can-reflect');
 
 QUnit.module('can-simple-observable/setter');
 
-QUnit.test('basics', function(){
-
+QUnit.test('basics', function(assert){
     var value = new SimpleObservable(2);
-
 
     var obs = new SetterObservable(function(){
         return value.get();
@@ -17,14 +15,14 @@ QUnit.test('basics', function(){
     });
 
     // Unbound and unobserved behavior
-    QUnit.equal(canReflect.getValue(obs), 2, 'getValue unbound');
+    assert.equal(canReflect.getValue(obs), 2, 'getValue unbound');
 
     canReflect.setValue(obs,3);
-    QUnit.equal(canReflect.getValue(value), 3, 'value set');
-    QUnit.equal(canReflect.getValue(obs), 3, 'getValue unbound');
+    assert.equal(canReflect.getValue(value), 3, 'value set');
+    assert.equal(canReflect.getValue(obs), 3, 'getValue unbound');
 });
 
-QUnit.test("get and set Priority", function(){
+QUnit.test("get and set Priority", function(assert){
     var value = new SimpleObservable(2);
 
     var obs = new SetterObservable(function(){
@@ -34,9 +32,7 @@ QUnit.test("get and set Priority", function(){
     });
 
     canReflect.setPriority(obs, 5);
-
-
-    QUnit.equal(canReflect.getPriority(obs), 5, "set priority");
+    assert.equal(canReflect.getPriority(obs), 5, "set priority");
 });
 
 if(System.env.indexOf("production") < 0) {
@@ -74,3 +70,27 @@ if(System.env.indexOf("production") < 0) {
     	});
     });
 }
+
+QUnit.test("getValueDependencies", function(assert) {
+	var value = new SimpleObservable(2);
+
+	var obs = new SetterObservable(function() {
+		return value.get();
+	}, function(newVal) {
+		value.set(newVal);
+	});
+
+	// unbound
+	assert.equal(
+		typeof canReflect.getValueDependencies(obs),
+		"undefined",
+		"should be undefined when observable is unbound"
+	);
+
+	// bound
+	canReflect.onValue(obs, function() {});
+	assert.deepEqual(
+		canReflect.getValueDependencies(obs).valueDependencies,
+		new Set([value])
+	);
+});
