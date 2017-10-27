@@ -32,20 +32,23 @@ QUnit.test('basics', function(){
 
     QUnit.equal(canReflect.getValue(obs), 'four', 'getValue after offValue');
 });
+if(System.env.indexOf("production") < 0) {
 
-QUnit.test("log observable changes", function(assert) {
-	var done = assert.async();
-	var obs = new SimpleObservable("one");
+    QUnit.test("log observable changes", function(assert) {
+    	var done = assert.async();
+    	var obs = new SimpleObservable("one");
 
-	// turn on debugging
-	obs.log();
+    	// turn on debugging
+    	obs.log();
 
-	assert.expect(2);
-	obs._log = function(previous, current) {
-		assert.equal(current, "two", "should get current value");
-		assert.equal(previous, "one", "should get previous value");
-		done();
-	};
+    	assert.expect(2);
+    	obs._log = function(previous, current) {
+    		assert.equal(current, "two", "should get current value");
+    		assert.equal(previous, "one", "should get previous value");
+    		done();
+    	};
 
-	canReflect.setValue(obs, "two");
-});
+    	canReflect.setValue(obs, "two");
+    });
+
+}
