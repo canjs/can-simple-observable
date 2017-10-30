@@ -6,7 +6,8 @@ var ns = require('can-namespace');
 
 /**
  * @module {function} can-simple-observable
- * @parent can-infrastructure
+ * @parent can-observables
+ * @collection can-infrastructure
  * @package ./package.json
  * @description Create an observable value.
  *
