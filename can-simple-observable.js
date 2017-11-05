@@ -74,7 +74,11 @@ SimpleObservable.prototype = {
 		this.handlers.add([queue|| "mutate", handler]);
 	},
 	off: function(handler, queue){
-		this.handlers.delete([queue|| "mutate", handler]);
+		if(!handler) {
+			this.handlers.delete([queue|| "mutate"]);
+		} else {
+			this.handlers.delete([queue|| "mutate", handler]);
+		}
 	},
 	log: log
 };

@@ -1,4 +1,3 @@
-var singleReference = require("can-util/js/single-reference/single-reference");
 var canReflect = require('can-reflect');
 
 var Compute = function(newVal){
@@ -9,17 +8,22 @@ var Compute = function(newVal){
 	}
 };
 
+var translationHelpers = new WeakMap();
+
 module.exports = function(observable) {
     var compute = Compute.bind(observable);
     compute.on = compute.bind = compute.addEventListener = function(event, handler) {
-        var translationHandler = function(newVal, oldVal) {
-            handler.call(compute, {type:'change'}, newVal, oldVal);
-        };
-        singleReference.set(handler, this, translationHandler);
+		var translationHandler = translationHelpers.get(handler);
+		if(!translationHandler) {
+			translationHandler = function(newVal, oldVal) {
+	            handler.call(compute, {type:'change'}, newVal, oldVal);
+	        };
+			translationHelpers.set(handler, translationHandler);
+		}
         canReflect.onValue( observable, translationHandler);
     };
     compute.off = compute.unbind = compute.removeEventListener = function(event, handler) {
-        canReflect.offValue( observable, singleReference.getAndDelete(handler, this) );
+        canReflect.offValue( observable, translationHelpers.get(handler) );
     };
 
     canReflect.assignSymbols(compute, {

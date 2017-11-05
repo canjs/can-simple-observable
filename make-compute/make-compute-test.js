@@ -17,3 +17,13 @@ QUnit.test('basics', 4, function(){
     });
     compute(7);
 });
+
+QUnit.test("unbind('change')", function(){
+    var observable = new SimpleObservable(5);
+    var compute = makeCompute(observable);
+    compute.on('change', function(){});
+    compute.on('change', function(){});
+    QUnit.equal(observable.handlers.get([]).length, 2, "2 observables");
+    compute.unbind("change");
+    QUnit.equal(observable.handlers.get([]).length, 0, "2 observables");
+});
