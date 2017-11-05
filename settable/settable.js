@@ -90,11 +90,15 @@ SettableObservable.prototype = {
 	on: function(handler, queue) {
 		this.handlers.add([queue || "mutate", handler]);
 	},
-	off: function(handler, queue) {
-		if(!handler) {
-			this.handlers.delete([queue|| "mutate"]);
+	off: function(handler, queueName){
+		if(handler === undefined) {
+			if(queueName === undefined) {
+				this.handlers.delete([]);
+			} else {
+				this.handlers.delete([queueName]);
+			}
 		} else {
-			this.handlers.delete([queue|| "mutate", handler]);
+			this.handlers.delete([queueName || "mutate", handler]);
 		}
 	},
 	hasDependencies: function(){
