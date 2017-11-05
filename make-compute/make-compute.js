@@ -16,10 +16,10 @@ module.exports = function(observable) {
             handler.call(compute, {type:'change'}, newVal, oldVal);
         };
         singleReference.set(handler, this, translationHandler);
-        observable.on(translationHandler);
+        canReflect.onValue( observable, translationHandler);
     };
     compute.off = compute.unbind = compute.removeEventListener = function(event, handler) {
-        observable.off( singleReference.getAndDelete(handler, this) );
+        canReflect.offValue( observable, singleReference.getAndDelete(handler, this) );
     };
 
     canReflect.assignSymbols(compute, {
