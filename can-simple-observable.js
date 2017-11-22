@@ -1,9 +1,11 @@
-var canReflect = require('can-reflect');
-var ObservationRecorder = require('can-observation-recorder');
-var ns = require('can-namespace');
-var KeyTree = require('can-key-tree');
-var queues = require("can-queues");
 var log = require("./log");
+var ns = require("can-namespace");
+var canSymbol = require("can-symbol");
+var canReflect = require("can-reflect");
+var ObservationRecorder = require("can-observation-recorder");
+var valueEventBindings = require("can-event-queue/value/value");
+
+var dispatchSymbol = canSymbol.for("can.dispatch");
 
 /**
  * @module {function} can-simple-observable
@@ -42,12 +44,15 @@ var log = require("./log");
  * ```
  */
 function SimpleObservable(initialValue) {
-	// Store handlers by queue
-	this.handlers = new KeyTree([Object, Array]);
+	valueEventBindings.addHandlers(this);
 	this.value = initialValue;
 }
-SimpleObservable.prototype = {
-	constructor: SimpleObservable,
+
+// mix in the value-like object event bindings
+valueEventBindings(SimpleObservable.prototype);
+
+Object.assign(SimpleObservable.prototype, {
+	log: log,
 	get: function(){
 		ObservationRecorder.add(this);
 		return this.value;
@@ -55,49 +60,18 @@ SimpleObservable.prototype = {
 	set: function(value){
 		var old = this.value;
 		this.value = value;
-		// adds callback handlers to be called w/i their respective queue.
-		queues.enqueueByQueue(this.handlers.getNode([]), this, [value, old]
-			//!steal-remove-start
-			/* jshint laxcomma: true */
-			, null
-			, [ canReflect.getName(this), "changed to", value, "from", old ]
-			/* jshint laxcomma: false */
-			//!steal-remove-end
-		);
-		//!steal-remove-start
-		if (typeof this._log === "function") {
-			this._log(old, value);
-		}
-		//!steal-remove-end
-	},
-	// .on( handler(newValue,oldValue), queue="mutate")
-	on: function(handler, queue){
-		this.handlers.add([queue|| "mutate", handler]);
-	},
-	off: function(handler, queueName){
-		if(handler === undefined) {
-			if(queueName === undefined) {
-				this.handlers.delete([]);
-			} else {
-				this.handlers.delete([queueName]);
-			}
-		} else {
-			this.handlers.delete([queueName || "mutate", handler]);
-		}
-	},
-	log: log
-};
 
-canReflect.assignSymbols(SimpleObservable.prototype,{
+		this[dispatchSymbol](value, old);
+	}
+});
+
+canReflect.assignSymbols(SimpleObservable.prototype, {
 	"can.getValue": SimpleObservable.prototype.get,
 	"can.setValue": SimpleObservable.prototype.set,
-	"can.onValue": SimpleObservable.prototype.on,
-	"can.offValue": SimpleObservable.prototype.off,
 	"can.isMapLike": false,
 	"can.valueHasDependencies": function(){
 		return true;
 	},
-
 	//!steal-remove-start
 	"can.getName": function() {
 		var value = this.value;

@@ -1,15 +1,15 @@
 var SimpleObservable = require("../can-simple-observable");
 var Observation = require("can-observation");
-var KeyTree = require('can-key-tree');
 var queues = require("can-queues");
 var SettableObservable = require("../settable/settable");
 var canReflect = require("can-reflect");
-var ObservationRecorder = require('can-observation-recorder');
+var ObservationRecorder = require("can-observation-recorder");
+var valueEventBindings = require("can-event-queue/value/value");
 
 // This is an observable that is like `settable`, but passed a `resolve`
 // function that can resolve the value of this observable late.
 function AsyncObservable(fn, context, initialValue) {
-	this.handlers = new KeyTree([Object, Array], {
+	valueEventBindings.addHandlers(this, {
 		onFirst: this.setup.bind(this),
 		onEmpty: this.teardown.bind(this)
 	});
@@ -19,20 +19,29 @@ function AsyncObservable(fn, context, initialValue) {
 
 	function observe() {
 		this.resolveCalled = false;
-		return fn.call(context, this.lastSetValue.get(), this.bound === true ? this.resolve : undefined);
+		return fn.call(
+			context,
+			this.lastSetValue.get(),
+			this.bound === true ? this.resolve : undefined
+		);
 	}
 
 	//!steal-remove-start
 	canReflect.assignSymbols(this, {
 		"can.getName": function() {
-			return canReflect.getName(this.constructor) + "<" + canReflect.getName(fn) + ">";
-		},
+			return (
+				canReflect.getName(this.constructor) +
+				"<" +
+				canReflect.getName(fn) +
+				">"
+			);
+		}
 	});
 	Object.defineProperty(this.handler, "name", {
-		value: canReflect.getName(this) + ".handler",
+		value: canReflect.getName(this) + ".handler"
 	});
 	Object.defineProperty(observe, "name", {
-		value: canReflect.getName(fn)+"::"+canReflect.getName(this.constructor),
+		value: canReflect.getName(fn) + "::" + canReflect.getName(this.constructor)
 	});
 	//!steal-remove-end
 
@@ -51,7 +60,7 @@ var peek = ObservationRecorder.ignore(canReflect.getValue.bind(canReflect));
 AsyncObservable.prototype.setup = function() {
 	this.bound = true;
 	canReflect.onValue(this.observation, this.handler, "notify");
-	if(!this.resolveCalled) {
+	if (!this.resolveCalled) {
 		this.value = peek(this.observation);
 	}
 };
@@ -68,10 +77,14 @@ AsyncObservable.prototype.resolve = function resolve(newVal) {
 	//!steal-remove-end
 
 	// adds callback handlers to be called w/i their respective queue.
-	queues.enqueueByQueue(this.handlers.getNode([]), this, [newVal, old], function() {
-		return {};
-	});
+	queues.enqueueByQueue(
+		this.handlers.getNode([]),
+		this,
+		[newVal, old],
+		function() {
+			return {};
+		}
+	);
 };
-
 
 module.exports = AsyncObservable;
