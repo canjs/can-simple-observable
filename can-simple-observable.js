@@ -44,7 +44,6 @@ var dispatchSymbol = canSymbol.for("can.dispatch");
  * ```
  */
 function SimpleObservable(initialValue) {
-	valueEventBindings.addHandlers(this);
 	this.value = initialValue;
 }
 

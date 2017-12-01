@@ -9,10 +9,6 @@ var valueEventBindings = require("can-event-queue/value/value");
 // This is an observable that is like `settable`, but passed a `resolve`
 // function that can resolve the value of this observable late.
 function AsyncObservable(fn, context, initialValue) {
-	valueEventBindings.addHandlers(this, {
-		onFirst: this.setup.bind(this),
-		onEmpty: this.teardown.bind(this)
-	});
 	this.resolve = this.resolve.bind(this);
 	this.lastSetValue = new SimpleObservable(initialValue);
 	this.handler = this.handler.bind(this);
@@ -57,7 +53,7 @@ AsyncObservable.prototype.handler = function(newVal) {
 };
 
 var peek = ObservationRecorder.ignore(canReflect.getValue.bind(canReflect));
-AsyncObservable.prototype.setup = function() {
+AsyncObservable.prototype.onBound = function() {
 	this.bound = true;
 	canReflect.onValue(this.observation, this.handler, "notify");
 	if (!this.resolveCalled) {

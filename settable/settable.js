@@ -16,10 +16,6 @@ var peek = ObservationRecorder.ignore(canReflect.getValue.bind(canReflect));
 // }, null, 5)
 // ```
 function SettableObservable(fn, context, initialValue) {
-	valueEventBindings.addHandlers(this, {
-		onFirst: this.setup.bind(this),
-		onEmpty: this.teardown.bind(this)
-	});
 
 	this.lastSetValue = new SimpleObservable(initialValue);
 	function observe() {
@@ -76,12 +72,12 @@ Object.assign(SettableObservable.prototype, {
 			}
 		);
 	},
-	setup: function() {
+	onBound: function() {
 		this.bound = true;
 		canReflect.onValue(this.observation, this.handler, "notify");
 		this.value = peek(this.observation);
 	},
-	teardown: function() {
+	onUnbound: function() {
 		this.bound = false;
 		canReflect.offValue(this.observation, this.handler, "notify");
 	},

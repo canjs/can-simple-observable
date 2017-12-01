@@ -6,10 +6,6 @@ var valueEventBindings = require("can-event-queue/value/value");
 // SetterObservable's call a function when set. Their getter is backed up by an
 // observation.
 function SetterObservable(getter, setter) {
-	valueEventBindings.addHandlers(this, {
-		onFirst: this.setup.bind(this),
-		onEmpty: this.teardown.bind(this)
-	});
 	this.setter = setter;
 	this.observation = new Observation(getter);
 	this.handler = this.handler.bind(this);
