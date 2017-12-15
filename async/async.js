@@ -77,9 +77,12 @@ AsyncObservable.prototype.resolve = function resolve(newVal) {
 		this.handlers.getNode([]),
 		this,
 		[newVal, old],
-		function() {
-			return {};
-		}
+		null
+		//!steal-remove-start
+		/* jshint laxcomma: true */
+		, [canReflect.getName(this), "resolved with", newVal]
+		/* jshint laxcomma: false */
+		//!steal-remove-end
 	);
 };
 
