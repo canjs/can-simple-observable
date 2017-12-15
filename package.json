@@ -1,6 +1,6 @@
 {
   "name": "can-simple-observable",
-  "version": "2.0.0-pre.24",
+  "version": "2.0.0-pre.25",
   "description": "Create an observable value.",
   "homepage": "https://canjs.com/doc/can-simple-observable.html",
   "repository": {
