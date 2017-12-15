@@ -112,3 +112,17 @@ QUnit.test("getValueDependencies", function(assert) {
 		"should return the internal observation dependencies"
 	);
 });
+
+QUnit.test("setting an observable with an internal observable", function(assert) {
+	var value = new SimpleObservable(2);
+
+	var obs = new SettableObservable(function(lastSet) {
+		return lastSet.get();
+	}, null, value);
+
+	canReflect.onValue(obs, function() {});
+
+	canReflect.setValue(obs, 5);
+	assert.equal(value.get(), 5, "should set the internal observable value");
+	assert.equal(canReflect.getValue(obs), 5, "should derive value correctly");
+});
