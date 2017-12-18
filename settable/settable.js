@@ -84,7 +84,11 @@ Object.assign(SettableObservable.prototype, {
 	set: function(newVal) {
 		var oldVal =  this.lastSetValue.get();
 
-		if (canReflect.isObservableLike(oldVal) && canReflect.isValueLike(oldVal)) {
+		if (
+			canReflect.isObservableLike(oldVal) &&
+			canReflect.isValueLike(oldVal) &&
+			!canReflect.isObservableLike(newVal)
+		) {
 			canReflect.setValue(oldVal, newVal);
 		} else {
 			if (newVal !== oldVal) {

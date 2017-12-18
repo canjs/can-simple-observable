@@ -126,3 +126,29 @@ QUnit.test("setting an observable with an internal observable", function(assert)
 	assert.equal(value.get(), 5, "should set the internal observable value");
 	assert.equal(canReflect.getValue(obs), 5, "should derive value correctly");
 });
+
+QUnit.test("setting an observable to Settable observable works", function(assert) {
+	var one = new SimpleObservable(1);
+	var two = new SimpleObservable(2);
+
+	var obs = new SettableObservable(
+		function fn(lastSet) {
+			return lastSet instanceof SimpleObservable ? lastSet.get() : lastSet;
+		},
+		null, // context
+		one   // initial value
+	);
+
+	canReflect.onValue(obs, function() {});
+	canReflect.setValue(obs, "one");
+	assert.equal(one.get(), "one", "should set the internal observable value");
+
+	// set an observable to the SettableObservable
+	// instance that is holding an observable already
+	canReflect.setValue(obs, two);
+	assert.equal(
+		canReflect.getValue(obs),
+		2,
+		"should replace the internal observable with 'two'"
+	);
+});
