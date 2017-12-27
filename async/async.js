@@ -15,11 +15,32 @@ function AsyncObservable(fn, context, initialValue) {
 
 	function observe() {
 		this.resolveCalled = false;
-		return fn.call(
+
+		// set inGetter flag to avoid calling `resolve` redundantly if it is called
+		// synchronously in the getter
+		this.inGetter = true;
+		var newVal = fn.call(
 			context,
 			this.lastSetValue.get(),
 			this.bound === true ? this.resolve : undefined
 		);
+		this.inGetter = false;
+
+		// if the getter returned a value, resolve with the value
+		if (newVal !== undefined) {
+			this.resolve(newVal);
+		}
+		// otherwise, if `resolve` was called synchronously in the getter,
+		// resolve with the value passed to `resolve`
+		else if (this.resolveCalled) {
+			this.resolve(this.value);
+		}
+
+		// if bound, the handlers will be called by `resolve`
+		// returning here would cause a duplicate event
+		if (this.bound !== true) {
+			return newVal;
+		}
 	}
 
 	//!steal-remove-start
@@ -72,18 +93,22 @@ AsyncObservable.prototype.resolve = function resolve(newVal) {
 	}
 	//!steal-remove-end
 
-	// adds callback handlers to be called w/i their respective queue.
-	queues.enqueueByQueue(
-		this.handlers.getNode([]),
-		this,
-		[newVal, old],
-		null
-		//!steal-remove-start
-		/* jshint laxcomma: true */
-		, [canReflect.getName(this), "resolved with", newVal]
-		/* jshint laxcomma: false */
-		//!steal-remove-end
-	);
+	// if resolve was called synchronously from the getter, do not enqueue changes
+	// the observation will handle calling resolve again if required
+	if (!this.inGetter) {
+		// adds callback handlers to be called w/i their respective queue.
+		queues.enqueueByQueue(
+			this.handlers.getNode([]),
+			this,
+			[newVal, old],
+			null
+			//!steal-remove-start
+			/* jshint laxcomma: true */
+			, [canReflect.getName(this), "resolved with", newVal]
+			/* jshint laxcomma: false */
+			//!steal-remove-end
+		);
+	}
 };
 
 module.exports = AsyncObservable;
