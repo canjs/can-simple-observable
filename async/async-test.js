@@ -3,6 +3,7 @@ var AsyncObservable = require('./async');
 var SimpleObservable = require('../can-simple-observable');
 var canReflect = require('can-reflect');
 var ObservationRecorder = require("can-observation-recorder");
+var Observation = require("can-observation");
 
 QUnit.module('can-simple-observable/async');
 
@@ -172,4 +173,97 @@ QUnit.test("getValueDependencies", function(assert) {
 		canReflect.getValueDependencies(obs).valueDependencies,
 		new Set([obs.lastSetValue, value])
 	);
+});
+
+QUnit.test("if a value is resolved and another is returned - returned value should be used (#13)", function(assert) {
+	var changeCount = 0;
+	var value = new SimpleObservable(1);
+
+	var asyncObs = new AsyncObservable(function(lastSet, resolve){
+		resolve("resolved value");
+		return "returned value";
+	});
+
+	canReflect.onValue(asyncObs, function() {
+		changeCount++;
+	});
+
+	assert.equal( asyncObs.get(), "returned value", "returned value");
+	assert.equal(changeCount, 1, "only one change event occured");
+
+});
+
+QUnit.test("return, resolve, and then return again should work and should update dependent observations (#13)", function(assert) {
+	var done = assert.async();
+	var value = new SimpleObservable(null);
+
+	var p1 = new Promise(function(resolve) {
+		resolve("resolved value 1");
+	});
+
+	var p2 = new Promise(function(resolve) {
+		setTimeout(function() {
+			resolve("resolved value 2");
+		}, 10);
+	});
+
+	var asyncObs = new AsyncObservable(function(lastSet, resolve){
+		var thePromise = value.get();
+		if (thePromise) {
+			thePromise.then(function(data) {
+				resolve(data);
+			});
+		}
+		return "returned value";
+	});
+
+	var wrapper = new Observation(function() {
+		return asyncObs.get();
+	});
+	canReflect.onValue(wrapper, function() {});
+
+	assert.equal(asyncObs.get(), "returned value", "returned value");
+	assert.equal(canReflect.getValue(wrapper), "returned value", "observation - returned value");
+
+	value.set(p1);
+	setTimeout(function() {
+		assert.equal(asyncObs.get(), "resolved value 1", "resolved value 1");
+		assert.equal(canReflect.getValue(wrapper), "resolved value 1", "observation - resolved value 1");
+
+		value.set(p2);
+		assert.equal(asyncObs.get(), "returned value", "returned value");
+		assert.equal(canReflect.getValue(wrapper), "returned value", "observation - returned value");
+
+		setTimeout(function() {
+			assert.equal(asyncObs.get(), "resolved value 2", "resolved value 2");
+			assert.equal(canReflect.getValue(wrapper), "resolved value 2", "observation - resolved value 2");
+
+			done();
+		}, 10);
+	});
+});
+
+QUnit.test("resolving, then later returning should not cause duplicate events (#13)", function(assert) {
+	var count = 0;
+	var id = new SimpleObservable(null);
+
+	var asyncObs = new AsyncObservable(function(lastSet, resolve) {
+		if (lastSet) {
+			return lastSet
+		} else if (id.get()) {
+			resolve("resolved value");
+		}
+	});
+
+	canReflect.onValue(asyncObs, function(newVal) {
+		count++;
+	});
+
+	id.set("trigger a change");
+	assert.equal(asyncObs.get(), "resolved value", "resolved value");
+
+	asyncObs.set("set value");
+	assert.equal(asyncObs.get(), "set value", "set value");
+
+	assert.equal(count, 2, "2 change events");
 });
