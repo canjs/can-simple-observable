@@ -82,8 +82,18 @@ Object.assign(SettableObservable.prototype, {
 		canReflect.offValue(this.observation, this.handler, "notify");
 	},
 	set: function(newVal) {
-		if (newVal !== this.lastSetValue.get()) {
-			this.lastSetValue.set(newVal);
+		var oldVal =  this.lastSetValue.get();
+
+		if (
+			canReflect.isObservableLike(oldVal) &&
+			canReflect.isValueLike(oldVal) &&
+			!canReflect.isObservableLike(newVal)
+		) {
+			canReflect.setValue(oldVal, newVal);
+		} else {
+			if (newVal !== oldVal) {
+				this.lastSetValue.set(newVal);
+			}
 		}
 	},
 	get: function() {
