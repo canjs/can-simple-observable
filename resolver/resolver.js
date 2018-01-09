@@ -5,6 +5,7 @@ var queues = require("can-queues");
 var log = require("../log");
 var valueEventBindings = require("can-event-queue/value/value");
 var mapEventBindings = require("can-event-queue/map/map");
+var SettableObservable = require("../settable/settable");
 
 // This supports an "internal" settable value that the `fn` can derive its value from.
 // It's useful to `can-define`.
@@ -20,36 +21,30 @@ function ResolverObservable(resolver, context) {
 	this.listenTo = this.listenTo.bind(this);
 	this.stopListening = this.stopListening.bind(this);
 	this.contextHandlers = new WeakMap();
+	this.teardown = null;
 	// a place holder for remembering where we bind
 	this.binder = {};
 	//!steal-remove-start
-	/*canReflect.assignSymbols(this, {
+	canReflect.assignSymbols(this, {
 		"can.getName": function() {
 			return (
 				canReflect.getName(this.constructor) +
 				"<" +
-				canReflect.getName(fn) +
+				canReflect.getName(resolver) +
 				">"
 			);
 		}
 	});
-	Object.defineProperty(this.handler, "name", {
-		value: canReflect.getName(this) + ".handler"
-	});
-	Object.defineProperty(observe, "name", {
-		value: canReflect.getName(fn) + "::" + canReflect.getName(this.constructor)
-	});*/
 	//!steal-remove-end
 }
-
-valueEventBindings(ResolverObservable.prototype);
+ResolverObservable.prototype = Object.create(SettableObservable.prototype);
 
 canReflect.assignMap(ResolverObservable.prototype, {
-	// call `obs.log()` to log observable changes to the browser console
-	// The observable has to be bound for `.log` to be called
-	log: log,
 	constructor: ResolverObservable,
 	listenTo: function(bindTarget, event, handler) {
+		//Object.defineProperty(this.handler, "name", {
+		//	value: canReflect.getName(this) + ".handler"
+		//});
 		if(canReflect.isPrimitive(bindTarget)) {
 			handler = event;
 			event = bindTarget;
@@ -77,6 +72,12 @@ canReflect.assignMap(ResolverObservable.prototype, {
 		mapEventBindings.stopListening.call(this.binder, bindTarget, event, contextHandler, "notify");
 	},
 	resolve: function(newVal) {
+		// if we are setting up the initial binding and we get a resolved value
+		// do not emit events for it.
+		if(this.isBinding) {
+			this.value = newVal;
+			return;
+		}
 		var old = this.value;
 
 		if(newVal !== old) {
@@ -100,19 +101,23 @@ canReflect.assignMap(ResolverObservable.prototype, {
 	},
 	onBound: function() {
 		this.bound = true;
-		var returnedValue = this.resolver.call(this.context, this.resolve, this.listenTo, this.stopListening);
-		if(returnedValue !== undefined) {
-			this.value = returnedValue;
-		}
+		this.isBinding = true;
+		this.teardown = this.resolver.call(this.context, this.resolve, this.listenTo, this.stopListening);
+		this.isBinding = false;
 	},
 	onUnbound: function() {
 		this.bound = false;
 		mapEventBindings.stopListening.call(this.binder);
+		if(this.teardown != null) {
+			this.teardown();
+			this.teardown = null;
+		}
 	},
 	set: function(newVal) {
-		if (newVal !== this.lastSetValue.get()) {
+		throw new Error("unable to set");
+		/*if (newVal !== this.lastSetValue.get()) {
 			this.lastSetValue.set(newVal);
-		}
+		}*/
 	},
 	get: function() {
 		if (ObservationRecorder.isRecording()) {
@@ -125,29 +130,14 @@ canReflect.assignMap(ResolverObservable.prototype, {
 		if (this.bound === true) {
 			return this.value;
 		} else {
-			return this.resolver.call(this.context);
+			var handler = function(){};
+			this.on(handler);
+			var val = this.value;
+			this.off(handler);
+			return val;
 		}
-	},
-	hasDependencies: function() {
-		return canReflect.valueHasDependencies(this.observation);
-	},
-	getValueDependencies: function() {
-		return canReflect.getValueDependencies(this.observation);
 	}
 });
 
-canReflect.assignSymbols(ResolverObservable.prototype, {
-	"can.getValue": ResolverObservable.prototype.get,
-	"can.setValue": ResolverObservable.prototype.set,
-	"can.isMapLike": false,
-	"can.getPriority": function() {
-		return canReflect.getPriority(this.observation);
-	},
-	"can.setPriority": function(newPriority) {
-		canReflect.setPriority(this.observation, newPriority);
-	},
-	"can.valueHasDependencies": ResolverObservable.prototype.hasDependencies,
-	"can.getValueDependencies": ResolverObservable.prototype.getValueDependencies
-});
 
 module.exports = ResolverObservable;
