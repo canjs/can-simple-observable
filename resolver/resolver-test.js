@@ -3,6 +3,8 @@ var ResolverObservable = require('./resolver');
 var SimpleObservable = require('../can-simple-observable');
 var mapEventMixin = require("can-event-queue/map/map");
 var canSymbol = require("can-symbol");
+var canReflect = require("can-reflect");
+var queues = require("can-queues");
 
 QUnit.module('can-simple-observable/resolver');
 
@@ -47,7 +49,7 @@ QUnit.test("timer with teardown", function(){
 
 });
 
-QUnit.test('basics listenTo', 8, function(assert){
+QUnit.test('basics listenTo', 10, function(assert){
     var number = new SimpleObservable(1);
 
     var map = mapEventMixin({
@@ -67,6 +69,7 @@ QUnit.test('basics listenTo', 8, function(assert){
     }, map);
 
     assert.equal(obs.get(), 6, "got unbound value");
+    assert.equal(canReflect.getValue(obs), 6, "got unbound value");
     var listenHandlers = obs.binder[ canSymbol.for("can.meta") ].listenHandlers;
     QUnit.equal(listenHandlers.size(), 0, "0 handlers after read");
 
@@ -80,4 +83,39 @@ QUnit.test('basics listenTo', 8, function(assert){
     number.set(2);
 
     assert.equal(obs.get(), 5, "got updated value");
+    assert.equal(canReflect.getValue(obs), 5, "got updated value");
+});
+
+QUnit.test("batches", 2, function(){
+    var firstValue = new SimpleObservable("Justin"),
+        lastValue = new SimpleObservable("Meyer");
+
+    var fullName = new ResolverObservable(function fullName(resolve, listenTo){
+        var first = firstValue.get(),
+            last = lastValue.get();
+
+        resolve(first + " " + last);
+
+        listenTo(firstValue, function firstChange(newFirst){
+            first = newFirst;
+            resolve(first + " " + last);
+        });
+        listenTo(lastValue, function lastChange(newLast){
+            last = newLast;
+            resolve(first + " " + last);
+        });
+
+    }, mapEventMixin({}) );
+
+    var handler = function(newVal, oldVal){
+        QUnit.equal(newVal, "Ramiya Shah", "event newVal");
+        QUnit.equal(oldVal, "Justin Meyer", "event oldVal");
+    };
+
+    fullName.on(handler);
+
+    queues.batch.start();
+    firstValue.set("Ramiya");
+    lastValue.set("Shah");
+    queues.batch.stop();
 });

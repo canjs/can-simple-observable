@@ -1,25 +1,20 @@
 var canReflect = require("can-reflect");
+var canSymbol = require("can-symbol");
 var ObservationRecorder = require("can-observation-recorder");
 var Observation = require("can-observation");
 var queues = require("can-queues");
-var log = require("../log");
-var valueEventBindings = require("can-event-queue/value/value");
 var mapEventBindings = require("can-event-queue/map/map");
 var SettableObservable = require("../settable/settable");
 
-// This supports an "internal" settable value that the `fn` can derive its value from.
-// It's useful to `can-define`.
-// ```
-// new SettableObservable(function(lastSet){
-//   return lastSet * 5;
-// }, null, 5)
-// ```
+
 function ResolverObservable(resolver, context) {
 	this.resolver = resolver;
 	this.context = context;
 	this.resolve = this.resolve.bind(this);
 	this.listenTo = this.listenTo.bind(this);
 	this.stopListening = this.stopListening.bind(this);
+	this.update = this.update.bind(this);
+
 	this.contextHandlers = new WeakMap();
 	this.teardown = null;
 	// a place holder for remembering where we bind
@@ -35,13 +30,20 @@ function ResolverObservable(resolver, context) {
 			);
 		}
 	});
+	Object.defineProperty(this.update, "name", {
+		value: canReflect.getName(this) + ".update"
+	});
 	//!steal-remove-end
 }
 ResolverObservable.prototype = Object.create(SettableObservable.prototype);
 
+function deleteHandler(bindTarget, event, queue, handler){
+	mapEventBindings.off.call(bindTarget, event, handler, queue);
+}
+
 canReflect.assignMap(ResolverObservable.prototype, {
 	constructor: ResolverObservable,
-	listenTo: function(bindTarget, event, handler) {
+	listenTo: function(bindTarget, event, handler, queueName) {
 		//Object.defineProperty(this.handler, "name", {
 		//	value: canReflect.getName(this) + ".handler"
 		//});
@@ -56,35 +58,56 @@ canReflect.assignMap(ResolverObservable.prototype, {
 		}
 		var contextHandler = handler.bind(this.context);
 		this.contextHandlers.set(handler, contextHandler);
-		mapEventBindings.listenTo.call(this.binder, bindTarget, event, contextHandler, "notify");
+		mapEventBindings.listenTo.call(this.binder, bindTarget, event, contextHandler, queueName || "notify");
 	},
-	stopListening: function(bindTarget, event, handler){
-		if(canReflect.isPrimitive(bindTarget)) {
-			handler = event;
-			event = bindTarget;
-			bindTarget = this.context;
+	stopListening: function(){
+
+		var meta = this.binder[canSymbol.for("can.meta")];
+		var listenHandlers = meta && meta.listenHandlers;
+		if(listenHandlers) {
+			var keys = mapEventBindings.stopListeningArgumentsToKeys.call({context: this.context, defaultQueue: "notify"});
+
+			listenHandlers.delete(keys, deleteHandler);
 		}
-		if(typeof event === "function") {
-			handler = event;
-			event = undefined;
-		}
-		var contextHandler = this.contextHandlers.get(handler);
-		mapEventBindings.stopListening.call(this.binder, bindTarget, event, contextHandler, "notify");
+		return this;
 	},
 	resolve: function(newVal) {
+		this.value = newVal;
 		// if we are setting up the initial binding and we get a resolved value
 		// do not emit events for it.
+
 		if(this.isBinding) {
-			this.value = newVal;
+			this.lastValue = this.value;
 			return;
 		}
-		var old = this.value;
 
-		if(newVal !== old) {
-			this.value = newVal;
+		if(this.value !== this.lastValue) {
+			queues.batch.start();
+			queues.deriveQueue.enqueue(
+				this.update,
+				this,
+				[],
+				{
+					//!steal-remove-start
+					/* jshint laxcomma: true */
+					log: [canReflect.getName(this.update)],
+					reasonLog: [canReflect.getName(this), "resolved with", newVal]
+					/* jshint laxcomma: false */
+					//!steal-remove-end
+				}
+			);
+			queues.batch.stop();
+		}
+	},
+	update: function(){
+
+		if(this.lastValue !== this.value) {
+
+			var old = this.lastValue;
+			this.lastValue = this.value;
 			//!steal-remove-start
 			if (typeof this._log === "function") {
-				this._log(old, newVal);
+				this._log(old, this.value);
 			}
 			//!steal-remove-end
 
@@ -92,10 +115,7 @@ canReflect.assignMap(ResolverObservable.prototype, {
 			queues.enqueueByQueue(
 				this.handlers.getNode([]),
 				this,
-				[newVal, old],
-				function() {
-					return {};
-				}
+				[this.value, old]
 			);
 		}
 	},
@@ -113,8 +133,8 @@ canReflect.assignMap(ResolverObservable.prototype, {
 			this.teardown = null;
 		}
 	},
-	set: function(newVal) {
-		throw new Error("unable to set");
+	set: function() {
+		throw new Error("unable to set "+ canReflect.getName(this));
 		/*if (newVal !== this.lastSetValue.get()) {
 			this.lastSetValue.set(newVal);
 		}*/
@@ -137,6 +157,21 @@ canReflect.assignMap(ResolverObservable.prototype, {
 			return val;
 		}
 	}
+});
+
+canReflect.assignSymbols(ResolverObservable.prototype, {
+	"can.getValue": ResolverObservable.prototype.get,
+	"can.setValue": ResolverObservable.prototype.set,
+	"can.isMapLike": false,
+	"can.getPriority": function() {
+		// TODO: the priority should come from any underlying values
+		return this.priority || 0;
+	},
+	"can.setPriority": function(newPriority) {
+		this.priority = newPriority;
+	},
+	"can.valueHasDependencies": SettableObservable.prototype.hasDependencies,
+	"can.getValueDependencies": SettableObservable.prototype.getValueDependencies
 });
 
 
