@@ -86,36 +86,39 @@ QUnit.test('basics listenTo', 10, function(assert){
     assert.equal(canReflect.getValue(obs), 5, "got updated value");
 });
 
-QUnit.test("batches", 2, function(){
-    var firstValue = new SimpleObservable("Justin"),
-        lastValue = new SimpleObservable("Meyer");
+QUnit.test("setter", 6, function(){
+    var state = new SimpleObservable("IL");
 
-    var fullName = new ResolverObservable(function fullName(resolve, listenTo){
-        var first = firstValue.get(),
-            last = lastValue.get();
+    var city = new ResolverObservable(function fullName(resolve, listen, mute, lastSet){
+        resolve(lastSet.get());
 
-        resolve(first + " " + last);
-
-        listenTo(firstValue, function firstChange(newFirst){
-            first = newFirst;
-            resolve(first + " " + last);
+        listen(state,function(){
+            resolve(null);
         });
-        listenTo(lastValue, function lastChange(newLast){
-            last = newLast;
-            resolve(first + " " + last);
-        });
+        listen(lastSet, resolve);
 
     }, mapEventMixin({}) );
 
-    var handler = function(newVal, oldVal){
-        QUnit.equal(newVal, "Ramiya Shah", "event newVal");
-        QUnit.equal(oldVal, "Justin Meyer", "event oldVal");
-    };
+    city.set("Chicago");
+    QUnit.equal(city.get(), "Chicago", "got unbound value");
 
-    fullName.on(handler);
+    city.set("Rockford");
+    QUnit.equal(city.get(), "Rockford", "got unbound value after another set");
 
-    queues.batch.start();
-    firstValue.set("Ramiya");
-    lastValue.set("Shah");
-    queues.batch.stop();
+    var CITIES = [];
+    city.on(function(city){
+        CITIES.push(city);
+    });
+
+    QUnit.equal(city.get(), "Rockford", "got bound value after binding");
+
+    state.set("CA");
+
+    QUnit.equal(city.get(), null, "updated city after state set");
+
+    city.set("San Jose");
+
+    QUnit.equal(city.get(), "San Jose", "updated city after state set");
+
+    QUnit.deepEqual(CITIES,[null,"San Jose"], "events right");
 });

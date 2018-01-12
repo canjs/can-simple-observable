@@ -5,7 +5,7 @@ var Observation = require("can-observation");
 var queues = require("can-queues");
 var mapEventBindings = require("can-event-queue/map/map");
 var SettableObservable = require("../settable/settable");
-
+var SimpleObservable = require("../can-simple-observable");
 
 function ResolverObservable(resolver, context) {
 	this.resolver = resolver;
@@ -14,6 +14,7 @@ function ResolverObservable(resolver, context) {
 	this.listenTo = this.listenTo.bind(this);
 	this.stopListening = this.stopListening.bind(this);
 	this.update = this.update.bind(this);
+	this.lastSet = new SimpleObservable(undefined);
 
 	this.contextHandlers = new WeakMap();
 	this.teardown = null;
@@ -32,6 +33,17 @@ function ResolverObservable(resolver, context) {
 	});
 	Object.defineProperty(this.update, "name", {
 		value: canReflect.getName(this) + ".update"
+	});
+
+	canReflect.assignSymbols(this.lastSet, {
+		"can.getName": function() {
+			return (
+				canReflect.getName(this.constructor)  +"::lastSet"+
+				"<" +
+				canReflect.getName(resolver) +
+				">"
+			);
+		}
 	});
 	//!steal-remove-end
 }
@@ -122,7 +134,7 @@ canReflect.assignMap(ResolverObservable.prototype, {
 	onBound: function() {
 		this.bound = true;
 		this.isBinding = true;
-		this.teardown = this.resolver.call(this.context, this.resolve, this.listenTo, this.stopListening);
+		this.teardown = this.resolver.call(this.context, this.resolve, this.listenTo, this.stopListening, this.lastSet);
 		this.isBinding = false;
 	},
 	onUnbound: function() {
@@ -133,8 +145,9 @@ canReflect.assignMap(ResolverObservable.prototype, {
 			this.teardown = null;
 		}
 	},
-	set: function() {
-		throw new Error("unable to set "+ canReflect.getName(this));
+	set: function(value) {
+		this.lastSet.set(value);
+
 		/*if (newVal !== this.lastSetValue.get()) {
 			this.lastSetValue.set(newVal);
 		}*/
