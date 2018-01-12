@@ -10,11 +10,14 @@ var SimpleObservable = require("../can-simple-observable");
 function ResolverObservable(resolver, context) {
 	this.resolver = resolver;
 	this.context = context;
-	this.resolve = this.resolve.bind(this);
-	this.listenTo = this.listenTo.bind(this);
-	this.stopListening = this.stopListening.bind(this);
+	this.valueOptions = {
+		resolve: this.resolve.bind(this),
+		listenTo: this.listenTo.bind(this),
+		stopListening: this.stopListening.bind(this),
+		lastSet: new SimpleObservable(undefined)
+	}
+
 	this.update = this.update.bind(this);
-	this.lastSet = new SimpleObservable(undefined);
 
 	this.contextHandlers = new WeakMap();
 	this.teardown = null;
@@ -35,7 +38,7 @@ function ResolverObservable(resolver, context) {
 		value: canReflect.getName(this) + ".update"
 	});
 
-	canReflect.assignSymbols(this.lastSet, {
+	canReflect.assignSymbols(this.valueOptions.lastSet, {
 		"can.getName": function() {
 			return (
 				canReflect.getName(this.constructor)  +"::lastSet"+
@@ -134,7 +137,7 @@ canReflect.assignMap(ResolverObservable.prototype, {
 	onBound: function() {
 		this.bound = true;
 		this.isBinding = true;
-		this.teardown = this.resolver.call(this.context, this);
+		this.teardown = this.resolver.call(this.context, this.valueOptions);
 		this.isBinding = false;
 	},
 	onUnbound: function() {
@@ -146,7 +149,7 @@ canReflect.assignMap(ResolverObservable.prototype, {
 		}
 	},
 	set: function(value) {
-		this.lastSet.set(value);
+		this.valueOptions.lastSet.set(value);
 
 		/*if (newVal !== this.lastSetValue.get()) {
 			this.lastSetValue.set(newVal);
