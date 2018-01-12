@@ -13,13 +13,13 @@ QUnit.test("timer with teardown", function(){
 
     var CALLS = [];
 
-    var obs = new ResolverObservable(function(resolve){
+    var obs = new ResolverObservable(function(value){
         CALLS.push("GENERATOR");
         var count = 0;
-        resolve(count);
+        value.resolve(count);
         var interval = setInterval(function(){
             CALLS.push("INTERVAL");
-            resolve(++count);
+            value.resolve(++count);
         },10);
 
         return function(){
@@ -56,14 +56,14 @@ QUnit.test('basics listenTo', 10, function(assert){
         property: 1
     });
 
-    var obs = new ResolverObservable(function(resolve, listenTo){
-        resolve(6);
+    var obs = new ResolverObservable(function(value){
+        value.resolve(6);
 
 
-        listenTo(number, function(newNumber){
+        value.listenTo(number, function(newNumber){
             assert.equal(newNumber,2, "got the new number");
             assert.equal(this, map, "listenTo this is the context");
-            resolve(5);
+            value.resolve(5);
         });
 
     }, map);
@@ -89,13 +89,13 @@ QUnit.test('basics listenTo', 10, function(assert){
 QUnit.test("setter", 6, function(){
     var state = new SimpleObservable("IL");
 
-    var city = new ResolverObservable(function fullName(resolve, listen, mute, lastSet){
-        resolve(lastSet.get());
+    var city = new ResolverObservable(function fullName(value){
+        value.resolve(value.lastSet.get());
 
-        listen(state,function(){
-            resolve(null);
+        value.listenTo(state,function(){
+            value.resolve(null);
         });
-        listen(lastSet, resolve);
+        value.listenTo(value.lastSet, value.resolve);
 
     }, mapEventMixin({}) );
 

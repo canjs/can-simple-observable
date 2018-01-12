@@ -134,7 +134,7 @@ canReflect.assignMap(ResolverObservable.prototype, {
 	onBound: function() {
 		this.bound = true;
 		this.isBinding = true;
-		this.teardown = this.resolver.call(this.context, this.resolve, this.listenTo, this.stopListening, this.lastSet);
+		this.teardown = this.resolver.call(this.context, this);
 		this.isBinding = false;
 	},
 	onUnbound: function() {
