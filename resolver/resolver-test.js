@@ -122,3 +122,93 @@ QUnit.test("setter", 6, function(){
 
     QUnit.deepEqual(CITIES,[null,"San Jose"], "events right");
 });
+
+QUnit.test("getValueDependencies and value dependencies", function(assert) {
+    var number = new SimpleObservable(1);
+
+    var map = mapEventMixin({
+        property: 1
+    });
+
+    var obs = new ResolverObservable(function(value) {
+        value.resolve(6);
+        value.listenTo(number, function(newNumber) {
+            assert.equal(newNumber, 2, "got the new number");
+            assert.equal(this, map, "listenTo this is the context");
+            value.resolve(5);
+        });
+	}, map);
+
+	// unbound
+	assert.equal(obs.get(), 6, "got unbound value");
+	assert.notOk(canReflect.valueHasDependencies(obs));
+	assert.equal(canReflect.getValueDependencies(obs), undefined);
+
+	// bound
+	canReflect.onValue(obs, function(newVal) {
+        assert.equal(newVal, 5, "got the new value");
+	});
+	assert.ok(canReflect.valueHasDependencies(obs));
+	assert.ok(canReflect.getValueDependencies(obs).valueDependencies.has(number));
+
+	// reverse direction
+	assert.ok(canReflect.getWhatIChange(number).derive.valueDependencies.has(obs));
+});
+
+QUnit.test("getValueDependencies and key dependencies", function(assert) {
+	var state = mapEventMixin({
+        foo: "foo"
+    });
+
+    var map = mapEventMixin({
+        property: 1
+    });
+
+    var obs = new ResolverObservable(function(value) {
+        value.resolve("bar");
+        value.listenTo(state, "foo", function(newVal) {
+            value.resolve(newVal);
+        });
+	}, map);
+
+	// unbound
+	assert.notOk(canReflect.valueHasDependencies(obs));
+	assert.equal(canReflect.getValueDependencies(obs), undefined);
+
+	// bound
+	canReflect.onValue(obs, function() {});
+	assert.ok(canReflect.valueHasDependencies(obs));
+	assert.ok(canReflect.getValueDependencies(obs).keyDependencies.get(state).has("foo"));
+
+	// reverse direction
+	assert.ok(canReflect.getWhatIChange(state, "foo").derive.valueDependencies.has(obs));
+});
+
+QUnit.test("getWhatIChange", function(assert) {
+    var number = new SimpleObservable(1);
+
+    var map = mapEventMixin({
+        property: 1
+    });
+
+    var dep = new ResolverObservable(function(value) {
+        value.resolve(6);
+        value.listenTo(number, function(newNumber) {
+			value.resolve(newNumber);
+        });
+	}, map);
+
+	var obs = new ResolverObservable(function(value) {
+		value.resolve("foo");
+		value.listenTo(dep, function(newVal) {
+			value.resolve(newVal);
+		});
+	});
+
+	// unbound
+	assert.ok(canReflect.getWhatIChange(dep) === undefined);
+
+	// bound
+	canReflect.onValue(obs, function() {});
+	assert.ok(canReflect.getWhatIChange(dep).derive.valueDependencies.has(obs));
+});

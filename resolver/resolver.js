@@ -7,6 +7,8 @@ var mapEventBindings = require("can-event-queue/map/map");
 var SettableObservable = require("../settable/settable");
 var SimpleObservable = require("../can-simple-observable");
 
+var getChangesSymbol = canSymbol.for("can.getChangesDependencyRecord");
+
 function ResolverObservable(resolver, context) {
 	this.resolver = resolver;
 	this.context = context;
@@ -15,7 +17,7 @@ function ResolverObservable(resolver, context) {
 		listenTo: this.listenTo.bind(this),
 		stopListening: this.stopListening.bind(this),
 		lastSet: new SimpleObservable(undefined)
-	}
+	};
 
 	this.update = this.update.bind(this);
 
@@ -71,7 +73,15 @@ canReflect.assignMap(ResolverObservable.prototype, {
 			handler = event;
 			event = undefined;
 		}
+
+		var resolverInstance = this;
 		var contextHandler = handler.bind(this.context);
+		contextHandler[getChangesSymbol] = function getChangesDependencyRecord() {
+			return {
+				valueDependencies: new Set([ resolverInstance ])
+			};
+		};
+
 		this.contextHandlers.set(handler, contextHandler);
 		mapEventBindings.listenTo.call(this.binder, bindTarget, event, contextHandler, queueName || "notify");
 	},
@@ -172,6 +182,51 @@ canReflect.assignMap(ResolverObservable.prototype, {
 			this.off(handler);
 			return val;
 		}
+	},
+	hasDependencies: function hasDependencies() {
+		var hasDependencies = false;
+
+		if (this.bound) {
+			var meta = this.binder[canSymbol.for("can.meta")];
+			var listenHandlers = meta && meta.listenHandlers;
+			hasDependencies = !!listenHandlers.size;
+		}
+
+		return hasDependencies;
+	},
+	getValueDependencies: function getValueDependencies() {
+		if (this.bound) {
+			var meta = this.binder[canSymbol.for("can.meta")];
+			var listenHandlers = meta && meta.listenHandlers;
+
+			var keyDeps = new Map();
+			var valueDeps = new Set();
+
+			if (listenHandlers) {
+				canReflect.each(listenHandlers.root, function(events, obj) {
+					canReflect.each(events, function(queues, eventName) {
+						if (eventName === undefined) {
+							valueDeps.add(obj);
+						} else {
+							var entry = keyDeps.get(obj);
+							if (!entry) {
+								entry = new Set();
+								keyDeps.set(obj, entry);
+							}
+							entry.add(eventName);
+						}
+					});
+				});
+
+				if (valueDeps.size || keyDeps.size) {
+					return Object.assign(
+						{},
+						keyDeps.size ? { keyDependencies: keyDeps } : null,
+						valueDeps.size ? { valueDependencies: valueDeps } : null
+					);
+				}
+			}
+		}
 	}
 });
 
@@ -186,8 +241,8 @@ canReflect.assignSymbols(ResolverObservable.prototype, {
 	"can.setPriority": function(newPriority) {
 		this.priority = newPriority;
 	},
-	"can.valueHasDependencies": SettableObservable.prototype.hasDependencies,
-	"can.getValueDependencies": SettableObservable.prototype.getValueDependencies
+	"can.valueHasDependencies": ResolverObservable.prototype.hasDependencies,
+	"can.getValueDependencies": ResolverObservable.prototype.getValueDependencies 
 });
 
 
