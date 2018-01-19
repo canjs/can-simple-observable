@@ -189,7 +189,7 @@ canReflect.assignMap(ResolverObservable.prototype, {
 		if (this.bound) {
 			var meta = this.binder[canSymbol.for("can.meta")];
 			var listenHandlers = meta && meta.listenHandlers;
-			hasDependencies = !!listenHandlers.size;
+			hasDependencies = !!listenHandlers.size();
 		}
 
 		return hasDependencies;
@@ -219,11 +219,16 @@ canReflect.assignMap(ResolverObservable.prototype, {
 				});
 
 				if (valueDeps.size || keyDeps.size) {
-					return Object.assign(
-						{},
-						keyDeps.size ? { keyDependencies: keyDeps } : null,
-						valueDeps.size ? { valueDependencies: valueDeps } : null
-					);
+					var result = {};
+
+					if (keyDeps.size) {
+						result.keyDependencies = keyDeps;
+					}
+					if (valueDeps.size) {
+						result.valueDependencies = valueDeps;
+					}
+
+					return result;
 				}
 			}
 		}
