@@ -103,7 +103,7 @@ canReflect.assignMap(ResolverObservable.prototype, {
 
 		if(this.isBinding) {
 			this.lastValue = this.value;
-			return;
+			return newVal;
 		}
 
 		if(this.value !== this.lastValue) {
@@ -123,6 +123,7 @@ canReflect.assignMap(ResolverObservable.prototype, {
 			);
 			queues.batch.stop();
 		}
+		return newVal;
 	},
 	update: function(){
 
@@ -247,7 +248,7 @@ canReflect.assignSymbols(ResolverObservable.prototype, {
 		this.priority = newPriority;
 	},
 	"can.valueHasDependencies": ResolverObservable.prototype.hasDependencies,
-	"can.getValueDependencies": ResolverObservable.prototype.getValueDependencies 
+	"can.getValueDependencies": ResolverObservable.prototype.getValueDependencies
 });
 
 

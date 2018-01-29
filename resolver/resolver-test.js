@@ -49,7 +49,7 @@ QUnit.test("timer with teardown", function(){
 
 });
 
-QUnit.test('basics listenTo', 10, function(assert){
+QUnit.test('basics listenTo', 14, function(assert){
     var number = new SimpleObservable(1);
 
     var map = mapEventMixin({
@@ -57,13 +57,13 @@ QUnit.test('basics listenTo', 10, function(assert){
     });
 
     var obs = new ResolverObservable(function(value){
-        value.resolve(6);
+        QUnit.equal( value.resolve(6), 6, "resolve returns passed value");
 
 
         value.listenTo(number, function(newNumber){
             assert.equal(newNumber,2, "got the new number");
             assert.equal(this, map, "listenTo this is the context");
-            value.resolve(5);
+            QUnit.equal( value.resolve(5), 5, "resolve returns passed value");
         });
 
     }, map);
