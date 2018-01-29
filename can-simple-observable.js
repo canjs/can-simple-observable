@@ -1,8 +1,11 @@
-var canReflect = require('can-reflect');
-var canBatch = require('can-event/batch/batch');
-var Observation = require('can-observation');
-var CID = require('can-cid');
-var ns = require('can-namespace');
+var log = require("./log");
+var ns = require("can-namespace");
+var canSymbol = require("can-symbol");
+var canReflect = require("can-reflect");
+var ObservationRecorder = require("can-observation-recorder");
+var valueEventBindings = require("can-event-queue/value/value");
+
+var dispatchSymbol = canSymbol.for("can.dispatch");
 
 /**
  * @module {function} can-simple-observable
@@ -11,20 +14,20 @@ var ns = require('can-namespace');
  * @package ./package.json
  * @description Create an observable value.
  *
- * @signature `observable(initialValue)`
+ * @signature `new SimpleObservable(initialValue)`
  *
  * Creates an observable value that can be read, written, and observed using [can-reflect].
  *
  * @param {*} initialValue The initial value of the observable.
  *
- * @return {can-simple-observable} The observable.
+ * @return {can-simple-observable} An observable instance
  *
  * @body
  *
  * ## Use
  *
  * ```js
- *  var obs = observable('one');
+ *  var obs = new SimpleObservable('one');
  *
  *  canReflect.getValue(obs); // -> "one"
  *
@@ -40,39 +43,47 @@ var ns = require('can-namespace');
  *  canReflect.offValue(obs, handler);
  * ```
  */
-module.exports = ns.simpleObservable = function simpleObservable(initialValue) {
-	var value = initialValue;
-	var handlers = [];
+function SimpleObservable(initialValue) {
+	this.value = initialValue;
+}
 
-	var fn = function(newValue) {
-		if(arguments.length) {
-			value = newValue;
-			handlers.forEach(function(handler) {
-				canBatch.queue([handler, fn, [newValue]]);
-			}, this);
-		} else {
-			Observation.add(fn);
-			return value;
+// mix in the value-like object event bindings
+valueEventBindings(SimpleObservable.prototype);
+
+Object.assign(SimpleObservable.prototype, {
+	log: log,
+	get: function(){
+		ObservationRecorder.add(this);
+		return this.value;
+	},
+	set: function(value){
+		var old = this.value;
+		this.value = value;
+
+		this[dispatchSymbol](value, old);
+	}
+});
+
+canReflect.assignSymbols(SimpleObservable.prototype, {
+	"can.getValue": SimpleObservable.prototype.get,
+	"can.setValue": SimpleObservable.prototype.set,
+	"can.isMapLike": false,
+	"can.valueHasDependencies": function(){
+		return true;
+	},
+	//!steal-remove-start
+	"can.getName": function() {
+		var value = this.value;
+		if (typeof value !== 'object' || value === null) {
+			value = JSON.stringify(value);
 		}
-	};
-
-	CID(fn);
-
-	canReflect.assignSymbols(fn, {
-		'can.onValue': function(handler) {
-			handlers.push(handler);
-		},
-		'can.offValue': function(handler) {
-			var index = handlers.indexOf(handler);
-			handlers.splice(index, 1);
-		},
-		'can.setValue': function(newValue) {
-			return fn(newValue);
-		},
-		'can.getValue': function() {
-			return fn();
+		else {
+			value = '';
 		}
-	});
 
-	return fn;
-};
+		return canReflect.getName(this.constructor) + "<" + value + ">";
+	},
+	//!steal-remove-end
+});
+
+module.exports = ns.SimpleObservable = SimpleObservable;

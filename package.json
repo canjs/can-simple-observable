@@ -1,8 +1,8 @@
 {
   "name": "can-simple-observable",
-  "version": "1.0.2",
+  "version": "2.0.0",
   "description": "Create an observable value.",
-  "homepage": "https://canjs.com",
+  "homepage": "https://canjs.com/doc/can-simple-observable.html",
   "repository": {
     "type": "git",
     "url": "git://github.com/canjs/can-simple-observable.git"
@@ -13,9 +13,8 @@
     "url": "https://www.bitovi.com/"
   },
   "scripts": {
-    "preversion": "npm test && npm run build",
-    "version": "git commit -am \"Update version number\" && git checkout -b release && git add -f dist/",
-    "postpublish": "git push --tags && git checkout master && git branch -D release && git push",
+    "preversion": "npm test",
+    "postpublish": "git push --tags && git push",
     "testee": "testee test.html --browsers firefox",
     "test": "npm run detect-cycle && npm run jshint && npm run testee",
     "jshint": "jshint ./*.js --config",
@@ -38,11 +37,16 @@
     ]
   },
   "dependencies": {
-    "can-cid": "^1.0.3",
-    "can-event": "^3.7.4",
+    "can-event-queue": "^1.0.0",
+    "can-key-tree": "^1.0.0",
+    "can-log": "^1.0.0",
     "can-namespace": "1.0.0",
-    "can-observation": "^3.3.5",
-    "can-reflect": "^1.4.1"
+    "can-observation": "^4.0.0",
+    "can-observation-recorder": "^1.0.0",
+    "can-queues": "^1.0.0",
+    "can-reflect": "^1.10.1",
+    "can-symbol": "^1.4.2",
+    "can-util": "^3.10.14"
   },
   "devDependencies": {
     "detect-cyclic-packages": "^1.1.0",
