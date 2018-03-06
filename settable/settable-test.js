@@ -3,6 +3,10 @@ var QUnit = require('steal-qunit');
 var SettableObservable = require('./settable');
 var SimpleObservable = require('../can-simple-observable');
 var canReflect = require('can-reflect');
+var Observation = require("can-observation");
+
+
+var ObservationRecorder = require("can-observation-recorder");
 
 QUnit.module('can-simple-observable/settable');
 
@@ -151,4 +155,29 @@ QUnit.test("setting an observable to Settable observable works", function(assert
 		2,
 		"should replace the internal observable with 'two'"
 	);
+});
+
+QUnit.test("proactive binding doesn't last past binding (can-stache#486)", function(){
+    var value = new SimpleObservable(2);
+
+    var readCount = 0;
+    var obs = new SettableObservable(function(lastSet){
+        readCount++;
+        return lastSet * value.get();
+    }, null, 1);
+
+    var outer = new Observation(function(){
+        return obs.get();
+    });
+
+    function handler(){}
+
+    outer.on(handler);
+
+    outer.off(handler);
+
+    value.set(3);
+
+    QUnit.equal(readCount, 1, "internal observation only updated once");
+
 });

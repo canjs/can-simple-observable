@@ -145,8 +145,7 @@ canReflect.assignMap(ResolverObservable.prototype, {
 			);
 		}
 	},
-	onBound: function() {
-		this.bound = true;
+	activate: function() {
 		this.isBinding = true;
 		this.teardown = this.resolver.call(this.context, this.valueOptions);
 		this.isBinding = false;
@@ -170,7 +169,7 @@ canReflect.assignMap(ResolverObservable.prototype, {
 		if (ObservationRecorder.isRecording()) {
 			ObservationRecorder.add(this);
 			if (!this.bound) {
-				Observation.temporarilyBind(this);
+				this.onBound();
 			}
 		}
 

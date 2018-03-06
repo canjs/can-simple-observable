@@ -73,7 +73,14 @@ Object.assign(SettableObservable.prototype, {
 		);
 	},
 	onBound: function() {
-		this.bound = true;
+		// onBound can be called by `.get` and then later called through
+		// a keyTree binding.
+		if(!this.bound) {
+			this.bound = true;
+			this.activate();
+		}
+	},
+	activate: function(){
 		canReflect.onValue(this.observation, this.handler, "notify");
 		this.value = peek(this.observation);
 	},
@@ -100,7 +107,8 @@ Object.assign(SettableObservable.prototype, {
 		if (ObservationRecorder.isRecording()) {
 			ObservationRecorder.add(this);
 			if (!this.bound) {
-				Observation.temporarilyBind(this);
+				// proactively setup bindings
+				this.onBound();
 			}
 		}
 
