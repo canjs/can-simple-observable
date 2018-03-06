@@ -74,8 +74,7 @@ AsyncObservable.prototype.handler = function(newVal) {
 };
 
 var peek = ObservationRecorder.ignore(canReflect.getValue.bind(canReflect));
-AsyncObservable.prototype.onBound = function() {
-	this.bound = true;
+AsyncObservable.prototype.activate = function() {
 	canReflect.onValue(this.observation, this.handler, "notify");
 	if (!this.resolveCalled) {
 		this.value = peek(this.observation);

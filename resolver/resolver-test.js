@@ -4,7 +4,7 @@ var SimpleObservable = require('../can-simple-observable');
 var mapEventMixin = require("can-event-queue/map/map");
 var canSymbol = require("can-symbol");
 var canReflect = require("can-reflect");
-var queues = require("can-queues");
+var Observation = require("can-observation");
 
 QUnit.module('can-simple-observable/resolver');
 
@@ -220,4 +220,32 @@ QUnit.test("getWhatIChange", function(assert) {
 	// bound
 	canReflect.onValue(obs, function() {});
 	assert.ok(canReflect.getWhatIChange(dep).derive.valueDependencies.has(obs));
+});
+
+QUnit.test("proactive binding doesn't last past binding (can-stache#486)", function(){
+    var v = new SimpleObservable(2);
+
+    var readCount = 0;
+
+    var obs = new ResolverObservable(function(value) {
+        value.listenTo(v, function(newVal) {
+            readCount++;
+			value.resolve(newVal);
+		});
+	});
+
+    var outer = new Observation(function(){
+        return obs.get();
+    });
+
+    function handler(){}
+
+    outer.on(handler);
+
+    outer.off(handler);
+
+    v.set(3);
+
+    QUnit.equal(readCount, 0, "internal observation only updated once");
+
 });

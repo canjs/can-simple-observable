@@ -267,3 +267,42 @@ QUnit.test("resolving, then later returning should not cause duplicate events (#
 
 	assert.equal(count, 2, "2 change events");
 });
+
+QUnit.test("proactive binding doesn't last past binding (can-stache#486)", function(){
+    var value = new SimpleObservable(2);
+
+    var readCount = 0;
+
+
+    var obs = new AsyncObservable(function(lastSet, resolve){
+
+        readCount++;
+        if(!resolve) {
+            return "default";
+        }
+        if(value.get() === 1) {
+            setTimeout(function(){
+                resolve("a");
+            }, 1);
+        } else {
+            setTimeout(function(){
+                resolve("b");
+            }, 1);
+        }
+    });
+
+    var outer = new Observation(function(){
+        return obs.get();
+    });
+
+    function handler(){}
+
+    outer.on(handler);
+
+    outer.off(handler);
+
+    value.set(3);
+
+    QUnit.equal(readCount, 1, "internal observation only updated once");
+
+});
