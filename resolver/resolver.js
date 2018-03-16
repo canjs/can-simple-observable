@@ -75,6 +75,19 @@ canReflect.assignMap(ResolverObservable.prototype, {
 		}
 
 		var resolverInstance = this;
+
+		//!steal-remove-start
+		if(!handler.name) {
+			Object.defineProperty(handler, "name", {
+				value:
+					(bindTarget ?
+						 canReflect.getName(bindTarget) : "")+
+					 (event ? ".on('"+event+"',handler)" : ".on(handler)")+
+					 "::"+canReflect.getName(this)
+			});
+		}
+		//!steal-remove-end
+
 		var contextHandler = handler.bind(this.context);
 		contextHandler[getChangesSymbol] = function getChangesDependencyRecord() {
 			return {

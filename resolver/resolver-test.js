@@ -48,7 +48,7 @@ QUnit.test("timer with teardown", function(){
     CALLS = [];
 
 });
-
+var queues = require("can-queues");
 QUnit.test('basics listenTo', 14, function(assert){
     var number = new SimpleObservable(1);
 
@@ -56,7 +56,7 @@ QUnit.test('basics listenTo', 14, function(assert){
         property: 1
     });
 
-    var obs = new ResolverObservable(function(value){
+    var obs = new ResolverObservable(function testee(value){
         QUnit.equal( value.resolve(6), 6, "resolve returns passed value");
 
 
@@ -79,7 +79,7 @@ QUnit.test('basics listenTo', 14, function(assert){
     assert.equal(obs.get(), 6, "got unbound value");
     listenHandlers = obs.binder[ canSymbol.for("can.meta") ].listenHandlers;
     QUnit.equal(listenHandlers.size(), 1, "1 handlers after bind");
-
+    queues.log("flush");
     number.set(2);
 
     assert.equal(obs.get(), 5, "got updated value");
