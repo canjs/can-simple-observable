@@ -4,6 +4,8 @@ var canReflect = require("can-reflect");
 var canReflectDeps = require("can-reflect-dependencies");
 var SimpleMap = require("can-simple-map");
 
+var onlyDevTest = steal.isEnv("production") ? QUnit.skip : QUnit.test;
+
 QUnit.module("can-simple-observable/key");
 
 QUnit.test("basics", function(assert) {
@@ -26,7 +28,7 @@ QUnit.test("get and set Priority", function(assert) {
 	assert.equal(canReflect.getPriority(observable), 5, "set priority");
 });
 
-QUnit.test("observable has a helpful name", function() {
+onlyDevTest("observable has a helpful name", function() {
 	var outer = {inner: {key: "hello"}};
 	var observable = keyObservable(outer, "inner.key");
 	QUnit.equal(
@@ -36,7 +38,7 @@ QUnit.test("observable has a helpful name", function() {
 	);
 });
 
-QUnit.test("dependency data", function(assert) {
+onlyDevTest("dependency data", function(assert) {
 	var outer = new SimpleMap({inner: new SimpleMap({key: "hello"})});
 	var observable = keyObservable(outer, "inner.key");
 
@@ -118,15 +120,25 @@ QUnit.test("works when the keys change", function(assert) {
 	// Test initial value
 	assert.equal(canReflect.getValue(observable), "hello", "initial value is correct");
 
-	// The observable must be bound before it returns dependency data
-	canReflect.onValue(observable, function() {});
-
 	// Change the value of a key along the path
 	var newInner = new SimpleMap({key: "aloha"});
 	outer.set("inner", newInner);
 
 	// Check that the observable has the new value
 	assert.equal(canReflect.getValue(observable), "aloha", "observable updated");
+});
+
+onlyDevTest("works when the keys change - dependency data", function(assert) {
+	var originalInner = new SimpleMap({key: "hello"});
+	var outer = new SimpleMap({inner: originalInner});
+	var observable = keyObservable(outer, "inner.key");
+
+	// The observable must be bound before it returns dependency data
+	canReflect.onValue(observable, function() {});
+
+	// Change the value of a key along the path
+	var newInner = new SimpleMap({key: "aloha"});
+	outer.set("inner", newInner);
 
 	// Check the observable’s dependency data
 	var observableDepData = canReflectDeps.getDependencyDataOf(observable);
