@@ -5,6 +5,7 @@ var mapEventMixin = require("can-event-queue/map/map");
 var canSymbol = require("can-symbol");
 var canReflect = require("can-reflect");
 var Observation = require("can-observation");
+var ObservationRecorder = require("can-observation-recorder");
 
 QUnit.module('can-simple-observable/resolver');
 
@@ -248,4 +249,25 @@ QUnit.test("proactive binding doesn't last past binding (can-stache#486)", funct
 
     QUnit.equal(readCount, 0, "internal observation only updated once");
 
+});
+
+QUnit.test("reading observables does not leak the observable read", function(){
+    // if an observation is listening is reading this value, the value
+    // should not ObservationRecorder.add its deps
+    // there is a similar test in can-define
+
+    var v = new SimpleObservable(2);
+
+    var obs = new ResolverObservable(function(value) {
+        value.resolve( canReflect.getValue(v));
+	});
+
+    ObservationRecorder.start();
+
+    obs.on(function(){});
+
+    var records = ObservationRecorder.stop();
+
+    QUnit.equal(records.keyDependencies.size, 0, "there are no key dependencies");
+    QUnit.equal(records.valueDependencies.size, 0, "there are no valueDependencies");
 });

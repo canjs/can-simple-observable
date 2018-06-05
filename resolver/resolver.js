@@ -10,7 +10,8 @@ var SimpleObservable = require("../can-simple-observable");
 var getChangesSymbol = canSymbol.for("can.getChangesDependencyRecord");
 
 function ResolverObservable(resolver, context) {
-	this.resolver = resolver;
+	// we don't want reads leaking out.  We should be binding to all of this ourselves.
+	this.resolver = ObservationRecorder.ignore(resolver);
 	this.context = context;
 	this.valueOptions = {
 		resolve: this.resolve.bind(this),
