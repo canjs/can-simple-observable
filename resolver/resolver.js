@@ -27,30 +27,32 @@ function ResolverObservable(resolver, context) {
 	// a place holder for remembering where we bind
 	this.binder = {};
 	//!steal-remove-start
-	canReflect.assignSymbols(this, {
-		"can.getName": function() {
-			return (
-				canReflect.getName(this.constructor) +
-				"<" +
-				canReflect.getName(resolver) +
-				">"
-			);
-		}
-	});
-	Object.defineProperty(this.update, "name", {
-		value: canReflect.getName(this) + ".update"
-	});
+	if (process.env.NODE_ENV !== 'production') {
+		canReflect.assignSymbols(this, {
+			"can.getName": function() {
+				return (
+					canReflect.getName(this.constructor) +
+					"<" +
+					canReflect.getName(resolver) +
+					">"
+				);
+			}
+		});
+		Object.defineProperty(this.update, "name", {
+			value: canReflect.getName(this) + ".update"
+		});
 
-	canReflect.assignSymbols(this.valueOptions.lastSet, {
-		"can.getName": function() {
-			return (
-				canReflect.getName(this.constructor)  +"::lastSet"+
-				"<" +
-				canReflect.getName(resolver) +
-				">"
-			);
-		}
-	});
+		canReflect.assignSymbols(this.valueOptions.lastSet, {
+			"can.getName": function() {
+				return (
+					canReflect.getName(this.constructor)  +"::lastSet"+
+					"<" +
+					canReflect.getName(resolver) +
+					">"
+				);
+			}
+		});
+	}
 	//!steal-remove-end
 }
 ResolverObservable.prototype = Object.create(SettableObservable.prototype);
@@ -78,14 +80,16 @@ canReflect.assignMap(ResolverObservable.prototype, {
 		var resolverInstance = this;
 
 		//!steal-remove-start
-		if(!handler.name) {
-			Object.defineProperty(handler, "name", {
-				value:
-					(bindTarget ?
-						 canReflect.getName(bindTarget) : "")+
-					 (event ? ".on('"+event+"',handler)" : ".on(handler)")+
-					 "::"+canReflect.getName(this)
-			});
+		if (process.env.NODE_ENV !== 'production') {
+			if(!handler.name) {
+				Object.defineProperty(handler, "name", {
+					value:
+						(bindTarget ?
+							 canReflect.getName(bindTarget) : "")+
+						 (event ? ".on('"+event+"',handler)" : ".on(handler)")+
+						 "::"+canReflect.getName(this)
+				});
+			}
 		}
 		//!steal-remove-end
 
@@ -121,19 +125,25 @@ canReflect.assignMap(ResolverObservable.prototype, {
 		}
 
 		if(this.value !== this.lastValue) {
+			var enqueueMeta  = {};
+
+			//!steal-remove-start
+			if (process.env.NODE_ENV !== 'production') {
+				/* jshint laxcomma: true */
+				enqueueMeta = {
+					log: [canReflect.getName(this.update)],
+					reasonLog: [canReflect.getName(this), "resolved with", newVal]
+				};
+				/* jshint laxcomma: false */
+			}
+			//!steal-remove-end
+			
 			queues.batch.start();
 			queues.deriveQueue.enqueue(
 				this.update,
 				this,
 				[],
-				{
-					//!steal-remove-start
-					/* jshint laxcomma: true */
-					log: [canReflect.getName(this.update)],
-					reasonLog: [canReflect.getName(this), "resolved with", newVal]
-					/* jshint laxcomma: false */
-					//!steal-remove-end
-				}
+				enqueueMeta
 			);
 			queues.batch.stop();
 		}
@@ -146,8 +156,10 @@ canReflect.assignMap(ResolverObservable.prototype, {
 			var old = this.lastValue;
 			this.lastValue = this.value;
 			//!steal-remove-start
-			if (typeof this._log === "function") {
-				this._log(old, this.value);
+			if (process.env.NODE_ENV !== 'production') {
+				if (typeof this._log === "function") {
+					this._log(old, this.value);
+				}
 			}
 			//!steal-remove-end
 

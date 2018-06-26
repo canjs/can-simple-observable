@@ -22,16 +22,18 @@ module.exports = function(observable) {
 				handler.call(compute, { type: "change" }, newVal, oldVal);
 			};
 			//!steal-remove-start
-			Object.defineProperty(translationHandler, "name", {
-				value:
-					"translationHandler(" +
-					event +
-					")::" +
-					canReflect.getName(observable) +
-					".onValue(" +
-					canReflect.getName(handler) +
-					")"
-			});
+			if (process.env.NODE_ENV !== 'production') {
+				Object.defineProperty(translationHandler, "name", {
+					value:
+						"translationHandler(" +
+						event +
+						")::" +
+						canReflect.getName(observable) +
+						".onValue(" +
+						canReflect.getName(handler) +
+						")"
+				});
+			}
 			//!steal-remove-end
 			translationHelpers.set(handler, translationHandler);
 		}

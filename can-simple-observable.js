@@ -64,15 +64,18 @@ Object.assign(SimpleObservable.prototype, {
 	}
 });
 
-canReflect.assignSymbols(SimpleObservable.prototype, {
+var simpleObservableProto = {
 	"can.getValue": SimpleObservable.prototype.get,
 	"can.setValue": SimpleObservable.prototype.set,
 	"can.isMapLike": false,
 	"can.valueHasDependencies": function(){
 		return true;
-	},
-	//!steal-remove-start
-	"can.getName": function() {
+	}
+};
+
+//!steal-remove-start
+if (process.env.NODE_ENV !== 'production') {
+	simpleObservableProto[canSymbol.for("can.getName")] = function() {
 		var value = this.value;
 		if (typeof value !== 'object' || value === null) {
 			value = JSON.stringify(value);
@@ -82,8 +85,10 @@ canReflect.assignSymbols(SimpleObservable.prototype, {
 		}
 
 		return canReflect.getName(this.constructor) + "<" + value + ">";
-	},
-	//!steal-remove-end
-});
+	};
+}
+//!steal-remove-end
+
+canReflect.assignSymbols(SimpleObservable.prototype, simpleObservableProto);
 
 module.exports = ns.SimpleObservable = SimpleObservable;
