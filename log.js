@@ -1,3 +1,4 @@
+"use strict";
 var dev = require("can-log/dev/dev");
 var canReflect = require("can-reflect");
 
