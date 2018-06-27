@@ -75,7 +75,7 @@ var simpleObservableProto = {
 
 //!steal-remove-start
 if (process.env.NODE_ENV !== 'production') {
-	simpleObservableProto[canSymbol.for("can.getName")] = function() {
+	simpleObservableProto["can.getName"] = function() {
 		var value = this.value;
 		if (typeof value !== 'object' || value === null) {
 			value = JSON.stringify(value);
