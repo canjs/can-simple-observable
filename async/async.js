@@ -44,22 +44,24 @@ function AsyncObservable(fn, context, initialValue) {
 	}
 
 	//!steal-remove-start
-	canReflect.assignSymbols(this, {
-		"can.getName": function() {
-			return (
-				canReflect.getName(this.constructor) +
-				"<" +
-				canReflect.getName(fn) +
-				">"
-			);
-		}
-	});
-	Object.defineProperty(this.handler, "name", {
-		value: canReflect.getName(this) + ".handler"
-	});
-	Object.defineProperty(observe, "name", {
-		value: canReflect.getName(fn) + "::" + canReflect.getName(this.constructor)
-	});
+	if (process.env.NODE_ENV !== 'production') {
+		canReflect.assignSymbols(this, {
+			"can.getName": function() {
+				return (
+					canReflect.getName(this.constructor) +
+					"<" +
+					canReflect.getName(fn) +
+					">"
+				);
+			}
+		});
+		Object.defineProperty(this.handler, "name", {
+			value: canReflect.getName(this) + ".handler"
+		});
+		Object.defineProperty(observe, "name", {
+			value: canReflect.getName(fn) + "::" + canReflect.getName(this.constructor)
+		});
+	}
 	//!steal-remove-end
 
 	this.observation = new Observation(observe, this);
@@ -87,26 +89,37 @@ AsyncObservable.prototype.resolve = function resolve(newVal) {
 	this.value = newVal;
 
 	//!steal-remove-start
-	if (typeof this._log === "function") {
-		this._log(old, newVal);
+	if (process.env.NODE_ENV !== 'production') {
+		if (typeof this._log === "function") {
+			this._log(old, newVal);
+		}
 	}
 	//!steal-remove-end
 
 	// if resolve was called synchronously from the getter, do not enqueue changes
 	// the observation will handle calling resolve again if required
 	if (!this.inGetter) {
-		// adds callback handlers to be called w/i their respective queue.
-		queues.enqueueByQueue(
-			this.handlers.getNode([]),
+		var queuesArgs = [
+		this.handlers.getNode([]),
 			this,
 			[newVal, old],
 			null
-			//!steal-remove-start
-			/* jshint laxcomma: true */
-			, [canReflect.getName(this), "resolved with", newVal]
-			/* jshint laxcomma: false */
-			//!steal-remove-end
-		);
+		];
+		//!steal-remove-start
+		if (process.env.NODE_ENV !== 'production') {
+			queuesArgs = [
+				this.handlers.getNode([]),
+				this,
+				[newVal, old],
+				null
+				/* jshint laxcomma: true */
+				, [canReflect.getName(this), "resolved with", newVal]
+				/* jshint laxcomma: false */
+			];
+		}
+		//!steal-remove-end
+		// adds callback handlers to be called w/i their respective queue.
+		queues.enqueueByQueue.apply(queues, queuesArgs);
 	}
 };
 

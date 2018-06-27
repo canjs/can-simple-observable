@@ -14,12 +14,14 @@ function quoteString(x) {
 //     `_.log` should be passed the current value and the value before the mutation
 module.exports = function log() {
 	//!steal-remove-start
-	this._log = function(previous, current) {
-		dev.log(
-			canReflect.getName(this),
-			"\n is  ", quoteString(current),
-			"\n was ", quoteString(previous)
-		);
-	};
+	if (process.env.NODE_ENV !== 'production') {
+		this._log = function(previous, current) {
+			dev.log(
+				canReflect.getName(this),
+				"\n is  ", quoteString(current),
+				"\n was ", quoteString(previous)
+			);
+		};
+	}
 	//!steal-remove-end
 };
