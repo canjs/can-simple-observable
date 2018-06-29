@@ -24,22 +24,24 @@ function SettableObservable(fn, context, initialValue) {
 	this.handler = this.handler.bind(this);
 
 	//!steal-remove-start
-	canReflect.assignSymbols(this, {
-		"can.getName": function() {
-			return (
-				canReflect.getName(this.constructor) +
-				"<" +
-				canReflect.getName(fn) +
-				">"
-			);
-		}
-	});
-	Object.defineProperty(this.handler, "name", {
-		value: canReflect.getName(this) + ".handler"
-	});
-	Object.defineProperty(observe, "name", {
-		value: canReflect.getName(fn) + "::" + canReflect.getName(this.constructor)
-	});
+	if (process.env.NODE_ENV !== 'production') {
+		canReflect.assignSymbols(this, {
+			"can.getName": function() {
+				return (
+					canReflect.getName(this.constructor) +
+					"<" +
+					canReflect.getName(fn) +
+					">"
+				);
+			}
+		});
+		Object.defineProperty(this.handler, "name", {
+			value: canReflect.getName(this) + ".handler"
+		});
+		Object.defineProperty(observe, "name", {
+			value: canReflect.getName(fn) + "::" + canReflect.getName(this.constructor)
+		});
+	}
 	//!steal-remove-end
 
 	this.observation = new Observation(observe, this);
@@ -57,8 +59,10 @@ Object.assign(SettableObservable.prototype, {
 		this.value = newVal;
 
 		//!steal-remove-start
-		if (typeof this._log === "function") {
-			this._log(old, newVal);
+		if (process.env.NODE_ENV !== 'production') {
+			if (typeof this._log === "function") {
+				this._log(old, newVal);
+			}
 		}
 		//!steal-remove-end
 

@@ -11,19 +11,21 @@ function SetterObservable(getter, setter) {
 	this.handler = this.handler.bind(this);
 
 	//!steal-remove-start
-	canReflect.assignSymbols(this, {
-		"can.getName": function() {
-			return (
-				canReflect.getName(this.constructor) +
-				"<" +
-				canReflect.getName(getter) +
-				">"
-			);
-		}
-	});
-	Object.defineProperty(this.handler, "name", {
-		value: canReflect.getName(this) + ".handler"
-	});
+	if (process.env.NODE_ENV !== 'production') {
+		canReflect.assignSymbols(this, {
+			"can.getName": function() {
+				return (
+					canReflect.getName(this.constructor) +
+					"<" +
+					canReflect.getName(getter) +
+					">"
+				);
+			}
+		});
+		Object.defineProperty(this.handler, "name", {
+			value: canReflect.getName(this) + ".handler"
+		});
+	}
 	//!steal-remove-end
 }
 
