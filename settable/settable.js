@@ -1,3 +1,4 @@
+"use strict";
 var canReflect = require("can-reflect");
 var ObservationRecorder = require("can-observation-recorder");
 var SimpleObservable = require("../can-simple-observable");

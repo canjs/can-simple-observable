@@ -1,3 +1,4 @@
+"use strict";
 var SimpleObservable = require("../can-simple-observable");
 var Observation = require("can-observation");
 var queues = require("can-queues");

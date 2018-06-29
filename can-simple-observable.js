@@ -1,3 +1,4 @@
+"use strict";
 var log = require("./log");
 var ns = require("can-namespace");
 var canSymbol = require("can-symbol");
