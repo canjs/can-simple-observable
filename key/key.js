@@ -11,11 +11,11 @@ if (process.env.NODE_ENV !== 'production') {
 
 module.exports = function keyObservable(root, keyPath) {
 	var keyPathParts = canKeyUtils.parts(keyPath);
+	var lastIndex = keyPathParts.length - 1;
 
 	// Some variables used to build the dependency/mutation graph
 	//!steal-remove-start
 	if (process.env.NODE_ENV !== 'production') {
-		var lastIndex = keyPathParts.length - 1;
 		var lastKey;// This stores the last part of the keyPath, e.g. “key” in “outer.inner.key”
 		var lastParent;// This stores the object that the last key is on, e.g. “outer.inner” in outer: {inner: {"key": "value"}}
 	}
