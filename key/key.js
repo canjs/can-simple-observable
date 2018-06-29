@@ -1,8 +1,13 @@
 var canKey = require("can-key");
 var canKeyUtils = require("can-key/utils");
 var canReflect = require("can-reflect");
-var canReflectDependencies = require("can-reflect-dependencies");
 var Observation = require("can-observation");
+
+//!steal-remove-start
+if (process.env.NODE_ENV !== 'production') {
+	var canReflectDependencies = require("can-reflect-dependencies");
+}
+//!steal-remove-end
 
 module.exports = function keyObservable(root, keyPath) {
 	var keyPathParts = canKeyUtils.parts(keyPath);
