@@ -1,6 +1,6 @@
 {
   "name": "can-simple-observable",
-  "version": "2.1.0-pre.3",
+  "version": "2.0.5",
   "description": "Create an observable value.",
   "homepage": "https://canjs.com/doc/can-simple-observable.html",
   "repository": {
@@ -47,8 +47,7 @@
     "can-queues": "^1.0.0",
     "can-reflect": "^1.10.1",
     "can-reflect-dependencies": "^1.0.0",
-    "can-symbol": "^1.4.2",
-    "can-util": "^3.10.14"
+    "can-symbol": "^1.4.2"
   },
   "devDependencies": {
     "can-simple-map": "^4.0.1",
