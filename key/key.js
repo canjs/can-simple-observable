@@ -46,10 +46,19 @@ module.exports = function keyObservable(root, keyPath) {
 		return value;
 	});
 
+	// Function for setting the value
+	var valueSetter = function(newVal) {
+		canKey.set(root, keyPathParts, newVal);
+	};
+
+	// The `value` property getter & setter
+	Object.defineProperty(observation, "value", {
+		get: observation.get,
+		set: valueSetter
+	});
+
 	var symbolsToAssign = {
-		"can.setValue": function(newVal) {
-			canKey.set(root, keyPathParts, newVal);
-		}
+		"can.setValue": valueSetter
 	};
 
 	//!steal-remove-start

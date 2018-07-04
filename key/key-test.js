@@ -20,6 +20,19 @@ QUnit.test("basics", function(assert) {
 	assert.equal(canReflect.getValue(observable), "aloha", "getValue unbound");
 });
 
+QUnit.test("value property is a getter and setter", function(assert) {
+	var outer = {inner: {key: "hello"}};
+	var observable = keyObservable(outer, "inner.key");
+
+	// Check getting the value
+	assert.equal(observable.value, "hello", "value getter works");
+
+	// Check setting the value
+	observable.value = "aloha";
+	assert.equal(canReflect.getValue(outer).inner.key, "aloha", "value setter sets other object");
+	assert.equal(canReflect.getValue(observable), "aloha", "value getter works after set");
+});
+
 QUnit.test("get and set Priority", function(assert) {
 	var outer = {inner: {key: "hello"}};
 	var observable = keyObservable(outer, "inner.key");
