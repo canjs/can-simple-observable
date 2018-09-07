@@ -72,11 +72,13 @@ module.exports = function keyObservable(root, keyPath) {
 
 		// Register what this observable changes
 		symbolsToAssign["can.getWhatIChange"] = function getWhatIChange() {
+			var m = new Map();
+			var s = new Set();
+			s.add(lastKey);
+			m.set(lastParent, s);
 			return {
 				mutate: {
-					keyDependencies: new Map([
-						[lastParent, new Set([lastKey])]
-					])
+					keyDependencies: m
 				}
 			};
 		};

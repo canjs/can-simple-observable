@@ -96,8 +96,10 @@ canReflect.assignMap(ResolverObservable.prototype, {
 
 		var contextHandler = handler.bind(this.context);
 		contextHandler[getChangesSymbol] = function getChangesDependencyRecord() {
+			var s = new Set();
+			s.add(resolverInstance);
 			return {
-				valueDependencies: new Set([ resolverInstance ])
+				valueDependencies: s
 			};
 		};
 
