@@ -34,6 +34,30 @@ QUnit.test('basics', function(){
     QUnit.equal(canReflect.getValue(obs), 'four', 'getValue after offValue');
 });
 
+QUnit.test('basics with .value', function(){
+    expect(5);
+    var obs = new SimpleObservable('one');
+	
+    QUnit.equal(obs.value, 'one', 'getValue');
+
+    obs.value = 'two';
+    ObservationRecorder.start();
+    QUnit.equal(obs.value, 'two', 'setValue');
+    var dependencies = ObservationRecorder.stop();
+    QUnit.ok(dependencies.valueDependencies.has(obs), "was recorded");
+
+    var handler = function(newValue) {
+        QUnit.equal(newValue, 'three', 'onValue');
+    };
+    canReflect.onValue(obs, handler);
+    obs.value = 'three';
+
+    canReflect.offValue(obs, handler);
+    obs.value = 'four';
+
+    QUnit.equal(obs.value, 'four', 'getValue after offValue');
+});
+
 skipProduction("log observable changes", function(assert) {
 	var done = assert.async();
 	var obs = new SimpleObservable("one");

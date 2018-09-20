@@ -45,23 +45,31 @@ var dispatchSymbol = canSymbol.for("can.dispatch");
  * ```
  */
 function SimpleObservable(initialValue) {
-	this.value = initialValue;
+	this._value = initialValue;
 }
 
 // mix in the value-like object event bindings
 valueEventBindings(SimpleObservable.prototype);
 
-Object.assign(SimpleObservable.prototype, {
+canReflect.assignMap(SimpleObservable.prototype, {
 	log: log,
 	get: function(){
 		ObservationRecorder.add(this);
-		return this.value;
+		return this._value;
 	},
 	set: function(value){
-		var old = this.value;
-		this.value = value;
+		var old = this._value;
+		this._value = value;
 
 		this[dispatchSymbol](value, old);
+	}
+});
+Object.defineProperty(SimpleObservable.prototype,"value",{
+	set: function(value){
+		return this.set(value);
+	},
+	get: function(){
+		return this.get();
 	}
 });
 
@@ -77,7 +85,7 @@ var simpleObservableProto = {
 //!steal-remove-start
 if (process.env.NODE_ENV !== 'production') {
 	simpleObservableProto["can.getName"] = function() {
-		var value = this.value;
+		var value = this._value;
 		if (typeof value !== 'object' || value === null) {
 			value = JSON.stringify(value);
 		}

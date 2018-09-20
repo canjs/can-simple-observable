@@ -80,7 +80,6 @@ QUnit.test('basics listenTo', 14, function(assert){
     assert.equal(obs.get(), 6, "got unbound value");
     listenHandlers = obs.binder[ canSymbol.for("can.meta") ].listenHandlers;
     QUnit.equal(listenHandlers.size(), 1, "1 handlers after bind");
-    queues.log("flush");
     number.set(2);
 
     assert.equal(obs.get(), 5, "got updated value");

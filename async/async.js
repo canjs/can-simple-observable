@@ -34,7 +34,7 @@ function AsyncObservable(fn, context, initialValue) {
 		// otherwise, if `resolve` was called synchronously in the getter,
 		// resolve with the value passed to `resolve`
 		else if (this.resolveCalled) {
-			this.resolve(this.value);
+			this.resolve(this._value);
 		}
 
 		// if bound, the handlers will be called by `resolve`
@@ -80,14 +80,14 @@ var peek = ObservationRecorder.ignore(canReflect.getValue.bind(canReflect));
 AsyncObservable.prototype.activate = function() {
 	canReflect.onValue(this.observation, this.handler, "notify");
 	if (!this.resolveCalled) {
-		this.value = peek(this.observation);
+		this._value = peek(this.observation);
 	}
 };
 
 AsyncObservable.prototype.resolve = function resolve(newVal) {
 	this.resolveCalled = true;
-	var old = this.value;
-	this.value = newVal;
+	var old = this._value;
+	this._value = newVal;
 
 	//!steal-remove-start
 	if (process.env.NODE_ENV !== 'production') {

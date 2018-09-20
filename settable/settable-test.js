@@ -49,6 +49,43 @@ QUnit.test('basics', function(){
 
 });
 
+QUnit.test('basics with .value', function(){
+
+    var value = new SimpleObservable(2);
+
+
+    var obs = new SettableObservable(function(lastSet){
+        return lastSet * value.value;
+    }, null, 1);
+
+    // Unbound and unobserved behavior
+    QUnit.equal(obs.value, 2, 'getValue unbound');
+
+
+
+    var changes = 0;
+    var handler = function(newValue) {
+        changes++;
+        if(changes === 1) {
+            QUnit.equal(newValue, 4, 'set observable');
+            obs.value = (3);
+        } else if(changes === 2){
+            QUnit.equal(newValue, 6, 'set observable in handler');
+            value.value = (3);
+        } else {
+            QUnit.equal(newValue, 9, 'set source');
+        }
+    };
+    canReflect.onValue(obs, handler);
+    obs.value =  2;
+
+    QUnit.equal( obs.value, 9, "after bound");
+    canReflect.offValue(obs, handler);
+    obs.value = 5;
+    QUnit.equal( obs.value, 15, "after unbound");
+
+});
+
 QUnit.test("get and set Priority", function(){
     var value = new SimpleObservable(2);
 

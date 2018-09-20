@@ -22,6 +22,23 @@ QUnit.test('basics', function(assert){
     assert.equal(canReflect.getValue(obs), 3, 'getValue unbound');
 });
 
+QUnit.test('basics with .value', function(assert){
+    var value = new SimpleObservable(2);
+
+    var obs = new SetterObservable(function(){
+        return value.value;
+    }, function(newVal){
+        value.value = (newVal);
+    });
+
+    // Unbound and unobserved behavior
+    assert.equal(obs.value, 2, 'getValue unbound');
+
+    obs.value = 3;
+    assert.equal(value.value, 3, 'value set');
+    assert.equal(obs.value, 3, 'getValue unbound');
+});
+
 QUnit.test("get and set Priority", function(assert){
     var value = new SimpleObservable(2);
 

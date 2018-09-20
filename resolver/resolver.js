@@ -14,7 +14,7 @@ function ResolverObservable(resolver, context) {
 	// we don't want reads leaking out.  We should be binding to all of this ourselves.
 	this.resolver = ObservationRecorder.ignore(resolver);
 	this.context = context;
-	this.valueOptions = {
+	this._valueOptions = {
 		resolve: this.resolve.bind(this),
 		listenTo: this.listenTo.bind(this),
 		stopListening: this.stopListening.bind(this),
@@ -43,7 +43,7 @@ function ResolverObservable(resolver, context) {
 			value: canReflect.getName(this) + ".update"
 		});
 
-		canReflect.assignSymbols(this.valueOptions.lastSet, {
+		canReflect.assignSymbols(this._valueOptions.lastSet, {
 			"can.getName": function() {
 				return (
 					canReflect.getName(this.constructor)  +"::lastSet"+
@@ -118,16 +118,16 @@ canReflect.assignMap(ResolverObservable.prototype, {
 		return this;
 	},
 	resolve: function(newVal) {
-		this.value = newVal;
+		this._value = newVal;
 		// if we are setting up the initial binding and we get a resolved value
 		// do not emit events for it.
 
 		if(this.isBinding) {
-			this.lastValue = this.value;
+			this.lastValue = this._value;
 			return newVal;
 		}
 
-		if(this.value !== this.lastValue) {
+		if(this._value !== this.lastValue) {
 			var enqueueMeta  = {};
 
 			//!steal-remove-start
@@ -140,7 +140,7 @@ canReflect.assignMap(ResolverObservable.prototype, {
 				/* jshint laxcomma: false */
 			}
 			//!steal-remove-end
-			
+
 			queues.batch.start();
 			queues.deriveQueue.enqueue(
 				this.update,
@@ -154,14 +154,14 @@ canReflect.assignMap(ResolverObservable.prototype, {
 	},
 	update: function(){
 
-		if(this.lastValue !== this.value) {
+		if(this.lastValue !== this._value) {
 
 			var old = this.lastValue;
-			this.lastValue = this.value;
+			this.lastValue = this._value;
 			//!steal-remove-start
 			if (process.env.NODE_ENV !== 'production') {
 				if (typeof this._log === "function") {
-					this._log(old, this.value);
+					this._log(old, this._value);
 				}
 			}
 			//!steal-remove-end
@@ -170,13 +170,13 @@ canReflect.assignMap(ResolverObservable.prototype, {
 			queues.enqueueByQueue(
 				this.handlers.getNode([]),
 				this,
-				[this.value, old]
+				[this._value, old]
 			);
 		}
 	},
 	activate: function() {
 		this.isBinding = true;
-		this.teardown = this.resolver.call(this.context, this.valueOptions);
+		this.teardown = this.resolver.call(this.context, this._valueOptions);
 		this.isBinding = false;
 	},
 	onUnbound: function() {
@@ -188,7 +188,7 @@ canReflect.assignMap(ResolverObservable.prototype, {
 		}
 	},
 	set: function(value) {
-		this.valueOptions.lastSet.set(value);
+		this._valueOptions.lastSet.set(value);
 
 		/*if (newVal !== this.lastSetValue.get()) {
 			this.lastSetValue.set(newVal);
@@ -203,11 +203,11 @@ canReflect.assignMap(ResolverObservable.prototype, {
 		}
 
 		if (this.bound === true) {
-			return this.value;
+			return this._value;
 		} else {
 			var handler = function(){};
 			this.on(handler);
-			var val = this.value;
+			var val = this._value;
 			this.off(handler);
 			return val;
 		}

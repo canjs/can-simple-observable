@@ -50,14 +50,14 @@ function SettableObservable(fn, context, initialValue) {
 
 valueEventBindings(SettableObservable.prototype);
 
-Object.assign(SettableObservable.prototype, {
+canReflect.assignMap(SettableObservable.prototype, {
 	// call `obs.log()` to log observable changes to the browser console
 	// The observable has to be bound for `.log` to be called
 	log: log,
 	constructor: SettableObservable,
 	handler: function(newVal) {
-		var old = this.value;
-		this.value = newVal;
+		var old = this._value;
+		this._value = newVal;
 
 		//!steal-remove-start
 		if (process.env.NODE_ENV !== 'production') {
@@ -87,7 +87,7 @@ Object.assign(SettableObservable.prototype, {
 	},
 	activate: function(){
 		canReflect.onValue(this.observation, this.handler, "notify");
-		this.value = peek(this.observation);
+		this._value = peek(this.observation);
 	},
 	onUnbound: function() {
 		this.bound = false;
@@ -118,7 +118,7 @@ Object.assign(SettableObservable.prototype, {
 		}
 
 		if (this.bound === true) {
-			return this.value;
+			return this._value;
 		} else {
 			return this.observation.get();
 		}
@@ -128,6 +128,15 @@ Object.assign(SettableObservable.prototype, {
 	},
 	getValueDependencies: function() {
 		return canReflect.getValueDependencies(this.observation);
+	}
+});
+
+Object.defineProperty(SettableObservable.prototype,"value",{
+	set: function(value){
+		return this.set(value);
+	},
+	get: function(){
+		return this.get();
 	}
 });
 
