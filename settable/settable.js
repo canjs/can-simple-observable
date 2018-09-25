@@ -56,7 +56,7 @@ canReflect.assignMap(SettableObservable.prototype, {
 	log: log,
 	constructor: SettableObservable,
 	handler: function(newVal) {
-		var old = this._value;
+		var old = this._value, reasonLog;
 		this._value = newVal;
 
 		//!steal-remove-start
@@ -64,6 +64,7 @@ canReflect.assignMap(SettableObservable.prototype, {
 			if (typeof this._log === "function") {
 				this._log(old, newVal);
 			}
+			reasonLog = [canReflect.getName(this),"set to", newVal, "from", old];
 		}
 		//!steal-remove-end
 
@@ -72,9 +73,8 @@ canReflect.assignMap(SettableObservable.prototype, {
 			this.handlers.getNode([]),
 			this,
 			[newVal, old],
-			function() {
-				return {};
-			}
+			null,
+			reasonLog
 		);
 	},
 	onBound: function() {
