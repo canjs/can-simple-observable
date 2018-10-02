@@ -270,3 +270,10 @@ QUnit.test("reading observables does not leak the observable read", function(){
     QUnit.equal(records.keyDependencies.size, 0, "there are no key dependencies");
     QUnit.equal(records.valueDependencies.size, 0, "there are no valueDependencies");
 });
+
+QUnit.test("initial value on lastSet can be set (can-define#397)", function () {
+    var defaulted = new ResolverObservable(function(props) {
+        QUnit.equal(props.lastSet.get(), 5, "observable has default value");
+    }, {}, 5);
+    defaulted.get();
+});
