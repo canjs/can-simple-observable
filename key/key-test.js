@@ -6,6 +6,11 @@ var SimpleMap = require("can-simple-map");
 
 var onlyDevTest = steal.isEnv("production") ? QUnit.skip : QUnit.test;
 
+var supportsFunctionNames = (function() {
+	var fn = function() {};
+	return !!fn.name;
+ }());
+
 QUnit.module("can-simple-observable/key");
 
 QUnit.test("basics", function(assert) {
@@ -41,15 +46,17 @@ QUnit.test("get and set Priority", function(assert) {
 	assert.equal(canReflect.getPriority(observable), 5, "set priority");
 });
 
-onlyDevTest("observable has a helpful name", function() {
-	var outer = {inner: {key: "hello"}};
-	var observable = keyObservable(outer, "inner.key");
-	QUnit.equal(
-		canReflect.getName(observable),
-		"keyObservable<Object{}.inner.key>",
-		"observable has the correct name"
-	);
-});
+if (supportsFunctionNames) {
+	onlyDevTest("observable has a helpful name", function() {
+		var outer = {inner: {key: "hello"}};
+		var observable = keyObservable(outer, "inner.key");
+		QUnit.equal(
+			canReflect.getName(observable),
+			"keyObservable<Object{}.inner.key>",
+			"observable has the correct name"
+		);
+	});
+}
 
 onlyDevTest("dependency data", function(assert) {
 	var outer = new SimpleMap({inner: new SimpleMap({key: "hello"})});
