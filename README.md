@@ -5,8 +5,6 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/canjs/can-simple-observable/blob/master/LICENSE)
 [![npm version](https://badge.fury.io/js/can-simple-observable.svg)](https://www.npmjs.com/package/can-simple-observable)
 [![Travis build status](https://travis-ci.org/canjs/can-simple-observable.svg?branch=master)](https://travis-ci.org/canjs/can-simple-observable)
-[![AppVeyor build status](https://ci.appveyor.com/api/projects/status/github/canjs/can-simple-observable?branch=master&svg=true)](https://ci.appveyor.com/project/matthewp/can-simple-observable)
-[![Coverage status](https://coveralls.io/repos/github/canjs/can-simple-observable/badge.svg?branch=master)](https://coveralls.io/github/canjs/can-simple-observable?branch=master)
 [![Greenkeeper badge](https://badges.greenkeeper.io/canjs/can-simple-observable.svg)](https://greenkeeper.io/)
 
 Core observable indicators.
