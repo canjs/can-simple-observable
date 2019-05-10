@@ -12,7 +12,7 @@ QUnit.module('can-simple-observable/settable');
 
 var onlyDevTest = steal.isEnv("production") ? QUnit.skip : QUnit.test;
 
-QUnit.test('basics', function(){
+QUnit.test('basics', function(assert) {
 
     var value = new SimpleObservable(2);
 
@@ -22,7 +22,7 @@ QUnit.test('basics', function(){
     }, null, 1);
 
     // Unbound and unobserved behavior
-    QUnit.equal(canReflect.getValue(obs), 2, 'getValue unbound');
+    assert.equal(canReflect.getValue(obs), 2, 'getValue unbound');
 
 
 
@@ -30,26 +30,26 @@ QUnit.test('basics', function(){
     var handler = function(newValue) {
         changes++;
         if(changes === 1) {
-            QUnit.equal(newValue, 4, 'set observable');
+            assert.equal(newValue, 4, 'set observable');
             obs.set(3);
         } else if(changes === 2){
-            QUnit.equal(newValue, 6, 'set observable in handler');
+            assert.equal(newValue, 6, 'set observable in handler');
             value.set(3);
         } else {
-            QUnit.equal(newValue, 9, 'set source');
+            assert.equal(newValue, 9, 'set source');
         }
     };
     canReflect.onValue(obs, handler);
     canReflect.setValue(obs, 2);
 
-    QUnit.equal( canReflect.getValue(obs), 9, "after bound");
+    assert.equal( canReflect.getValue(obs), 9, "after bound");
     canReflect.offValue(obs, handler);
     canReflect.setValue(obs, 5);
-    QUnit.equal( canReflect.getValue(obs), 15, "after unbound");
+    assert.equal( canReflect.getValue(obs), 15, "after unbound");
 
 });
 
-QUnit.test('basics with .value', function(){
+QUnit.test('basics with .value', function(assert) {
 
     var value = new SimpleObservable(2);
 
@@ -59,7 +59,7 @@ QUnit.test('basics with .value', function(){
     }, null, 1);
 
     // Unbound and unobserved behavior
-    QUnit.equal(obs.value, 2, 'getValue unbound');
+    assert.equal(obs.value, 2, 'getValue unbound');
 
 
 
@@ -67,26 +67,26 @@ QUnit.test('basics with .value', function(){
     var handler = function(newValue) {
         changes++;
         if(changes === 1) {
-            QUnit.equal(newValue, 4, 'set observable');
+            assert.equal(newValue, 4, 'set observable');
             obs.value = (3);
         } else if(changes === 2){
-            QUnit.equal(newValue, 6, 'set observable in handler');
+            assert.equal(newValue, 6, 'set observable in handler');
             value.value = (3);
         } else {
-            QUnit.equal(newValue, 9, 'set source');
+            assert.equal(newValue, 9, 'set source');
         }
     };
     canReflect.onValue(obs, handler);
     obs.value =  2;
 
-    QUnit.equal( obs.value, 9, "after bound");
+    assert.equal( obs.value, 9, "after bound");
     canReflect.offValue(obs, handler);
     obs.value = 5;
-    QUnit.equal( obs.value, 15, "after unbound");
+    assert.equal( obs.value, 15, "after unbound");
 
 });
 
-QUnit.test("get and set Priority", function(){
+QUnit.test("get and set Priority", function(assert) {
     var value = new SimpleObservable(2);
 
 
@@ -97,7 +97,7 @@ QUnit.test("get and set Priority", function(){
     canReflect.setPriority(obs, 5);
 
 
-    QUnit.equal(canReflect.getPriority(obs), 5, "set priority");
+    assert.equal(canReflect.getPriority(obs), 5, "set priority");
 });
 
 onlyDevTest("log observable changes", function(assert) {
@@ -194,7 +194,7 @@ QUnit.test("setting an observable to Settable observable works", function(assert
 	);
 });
 
-QUnit.test("proactive binding doesn't last past binding (can-stache#486)", function(){
+QUnit.test("proactive binding doesn't last past binding (can-stache#486)", function(assert) {
     var value = new SimpleObservable(2);
 
     var readCount = 0;
@@ -215,6 +215,6 @@ QUnit.test("proactive binding doesn't last past binding (can-stache#486)", funct
 
     value.set(3);
 
-    QUnit.equal(readCount, 1, "internal observation only updated once");
+    assert.equal(readCount, 1, "internal observation only updated once");
 
 });

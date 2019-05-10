@@ -28,24 +28,24 @@ QUnit.test('basics', function(assert){
     });
 
     // Unbound and unobserved behavior
-    QUnit.equal(canReflect.getValue(obs), 'default', 'getValue unbound');
+    assert.equal(canReflect.getValue(obs), 'default', 'getValue unbound');
 
     // Unbound , being observed behavior
     ObservationRecorder.start();
-    QUnit.equal(canReflect.getValue(obs), undefined, "getValue being bound");
+    assert.equal(canReflect.getValue(obs), undefined, "getValue being bound");
     var dependencies = ObservationRecorder.stop();
-    QUnit.ok(!dependencies.valueDependencies.has(value), "did not record value");
-    QUnit.ok(dependencies.valueDependencies.has(obs), "did record observable");
-    QUnit.equal(dependencies.valueDependencies.size, 1, "only one value to listen to");
+    assert.ok(!dependencies.valueDependencies.has(value), "did not record value");
+    assert.ok(dependencies.valueDependencies.has(obs), "did record observable");
+    assert.equal(dependencies.valueDependencies.size, 1, "only one value to listen to");
 
     var changes = 0;
     var handler = function(newValue) {
         changes++;
         if(changes === 1) {
-            QUnit.equal(newValue, 'a', 'onValue a');
+            assert.equal(newValue, 'a', 'onValue a');
             value.set(2);
         } else {
-            QUnit.equal(newValue, 'b', 'onValue b');
+            assert.equal(newValue, 'b', 'onValue b');
             done();
         }
     };
@@ -54,7 +54,7 @@ QUnit.test('basics', function(assert){
 });
 
 
-QUnit.test("get and set Priority", function(){
+QUnit.test("get and set Priority", function(assert) {
     var value = new SimpleObservable(1);
 
     var obs = new AsyncObservable(function(lastSet, resolve){
@@ -74,10 +74,10 @@ QUnit.test("get and set Priority", function(){
 
     canReflect.setPriority(obs, 5);
 
-    QUnit.equal(canReflect.getPriority(obs), 5, "set priority");
+    assert.equal(canReflect.getPriority(obs), 5, "set priority");
 });
 
-QUnit.test("prevent a getter returning undefined from overwriting last resolved value", function(){
+QUnit.test("prevent a getter returning undefined from overwriting last resolved value", function(assert) {
     var value = new SimpleObservable(1);
 
     var obs = new AsyncObservable(function(lastSet, resolve){
@@ -89,24 +89,24 @@ QUnit.test("prevent a getter returning undefined from overwriting last resolved 
 
     });
     obs.on(function(){});
-    QUnit.equal( obs.get(), null );
+    assert.equal( obs.get(), null );
     value.set(2);
 
-    QUnit.equal( obs.get(), 4 );
+    assert.equal( obs.get(), 4 );
 
 });
 
-QUnit.test("prevent a getter returning undefined from overwriting last resolved value at the start", function(){
+QUnit.test("prevent a getter returning undefined from overwriting last resolved value at the start", function(assert) {
     var value = new SimpleObservable(1);
 
     var obs = new AsyncObservable(function(lastSet, resolve){
         resolve(value.get()*2);
     });
     obs.on(function(){});
-    QUnit.equal( obs.get(), 2 );
+    assert.equal( obs.get(), 2 );
     value.set(2);
 
-    QUnit.equal( obs.get(), 4 );
+    assert.equal( obs.get(), 4 );
 
 });
 
@@ -268,7 +268,7 @@ QUnit.test("resolving, then later returning should not cause duplicate events (#
 	assert.equal(count, 2, "2 change events");
 });
 
-QUnit.test("proactive binding doesn't last past binding (can-stache#486)", function(){
+QUnit.test("proactive binding doesn't last past binding (can-stache#486)", function(assert) {
     var value = new SimpleObservable(2);
 
     var readCount = 0;
@@ -303,6 +303,6 @@ QUnit.test("proactive binding doesn't last past binding (can-stache#486)", funct
 
     value.set(3);
 
-    QUnit.equal(readCount, 1, "internal observation only updated once");
+    assert.equal(readCount, 1, "internal observation only updated once");
 
 });

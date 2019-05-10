@@ -5,25 +5,25 @@ var makeCompute = require("./make-compute");
 
 QUnit.module('can-simple-observable/make-compute');
 
-QUnit.test('basics', 4, function(){
+QUnit.test('basics', 4, function(assert) {
     var compute = makeCompute(new SimpleObservable(5));
-    QUnit.equal( compute(), 5, "read");
+    assert.equal( compute(), 5, "read");
     compute(6);
-    QUnit.equal( compute(), 6, "write");
+    assert.equal( compute(), 6, "write");
 
     compute.on("change", function(ev, newVal, oldVal){
-        QUnit.equal(newVal, 7, "bound newVal");
-        QUnit.equal(oldVal, 6, "bound newVal");
+        assert.equal(newVal, 7, "bound newVal");
+        assert.equal(oldVal, 6, "bound newVal");
     });
     compute(7);
 });
 
-QUnit.test("unbind('change')", function(){
+QUnit.test("unbind('change')", function(assert) {
     var observable = new SimpleObservable(5);
     var compute = makeCompute(observable);
     compute.on('change', function(){});
     compute.on('change', function(){});
-    QUnit.equal(observable.handlers.get([]).length, 2, "2 observables");
+    assert.equal(observable.handlers.get([]).length, 2, "2 observables");
     compute.unbind("change");
-    QUnit.equal(observable.handlers.get([]).length, 0, "2 observables");
+    assert.equal(observable.handlers.get([]).length, 0, "2 observables");
 });

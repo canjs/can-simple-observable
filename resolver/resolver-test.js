@@ -9,8 +9,8 @@ var ObservationRecorder = require("can-observation-recorder");
 
 QUnit.module('can-simple-observable/resolver');
 
-QUnit.test("timer with teardown", function(){
-    QUnit.stop();
+QUnit.test("timer with teardown", function(assert) {
+    var done = assert.async();
 
     var CALLS = [];
 
@@ -29,23 +29,23 @@ QUnit.test("timer with teardown", function(){
         };
     }, {});
 
-    QUnit.equal( obs.get(), 0, "got initial value unbound");
-    QUnit.deepEqual(CALLS,["GENERATOR","TEARDOWN"], "initial unbound read");
+    assert.equal( obs.get(), 0, "got initial value unbound");
+    assert.deepEqual(CALLS,["GENERATOR","TEARDOWN"], "initial unbound read");
     CALLS = [];
 
     var handler = function(newVal){
-        QUnit.equal( newVal, 1, "got first emitted value");
-        QUnit.equal( obs.get(), 1, "got first emitted value");
-        QUnit.deepEqual(CALLS,["INTERVAL"], "emitted value");
+        assert.equal( newVal, 1, "got first emitted value");
+        assert.equal( obs.get(), 1, "got first emitted value");
+        assert.deepEqual(CALLS,["INTERVAL"], "emitted value");
         CALLS = [];
         obs.off(handler);
-        QUnit.deepEqual(CALLS,["TEARDOWN"], "emitted value");
-        QUnit.start();
+        assert.deepEqual(CALLS,["TEARDOWN"], "emitted value");
+        done();
     };
 
     obs.on(handler);
-    QUnit.equal( obs.get(), 0, "got initial value after bind");
-    QUnit.deepEqual(CALLS,["GENERATOR"], "initial bind");
+    assert.equal( obs.get(), 0, "got initial value after bind");
+    assert.deepEqual(CALLS,["GENERATOR"], "initial bind");
     CALLS = [];
 
 });
@@ -58,13 +58,13 @@ QUnit.test('basics listenTo', 14, function(assert){
     });
 
     var obs = new ResolverObservable(function testee(value){
-        QUnit.equal( value.resolve(6), 6, "resolve returns passed value");
+        assert.equal( value.resolve(6), 6, "resolve returns passed value");
 
 
         value.listenTo(number, function(newNumber){
             assert.equal(newNumber,2, "got the new number");
             assert.equal(this, map, "listenTo this is the context");
-            QUnit.equal( value.resolve(5), 5, "resolve returns passed value");
+            assert.equal( value.resolve(5), 5, "resolve returns passed value");
         });
 
     }, map);
@@ -72,21 +72,21 @@ QUnit.test('basics listenTo', 14, function(assert){
     assert.equal(obs.get(), 6, "got unbound value");
     assert.equal(canReflect.getValue(obs), 6, "got unbound value");
     var listenHandlers = obs.binder[ canSymbol.for("can.meta") ].listenHandlers;
-    QUnit.equal(listenHandlers.size(), 0, "0 handlers after read");
+    assert.equal(listenHandlers.size(), 0, "0 handlers after read");
 
     obs.on(function(newVal){
-        QUnit.equal(newVal, 5, "got the new value");
+        assert.equal(newVal, 5, "got the new value");
     });
     assert.equal(obs.get(), 6, "got unbound value");
     listenHandlers = obs.binder[ canSymbol.for("can.meta") ].listenHandlers;
-    QUnit.equal(listenHandlers.size(), 1, "1 handlers after bind");
+    assert.equal(listenHandlers.size(), 1, "1 handlers after bind");
     number.set(2);
 
     assert.equal(obs.get(), 5, "got updated value");
     assert.equal(canReflect.getValue(obs), 5, "got updated value");
 });
 
-QUnit.test("setter", 6, function(){
+QUnit.test("setter", 6, function(assert) {
     var state = new SimpleObservable("IL");
 
     var city = new ResolverObservable(function fullName(value){
@@ -100,27 +100,27 @@ QUnit.test("setter", 6, function(){
     }, mapEventMixin({}) );
 
     city.set("Chicago");
-    QUnit.equal(city.get(), "Chicago", "got unbound value");
+    assert.equal(city.get(), "Chicago", "got unbound value");
 
     city.set("Rockford");
-    QUnit.equal(city.get(), "Rockford", "got unbound value after another set");
+    assert.equal(city.get(), "Rockford", "got unbound value after another set");
 
     var CITIES = [];
     city.on(function(city){
         CITIES.push(city);
     });
 
-    QUnit.equal(city.get(), "Rockford", "got bound value after binding");
+    assert.equal(city.get(), "Rockford", "got bound value after binding");
 
     state.set("CA");
 
-    QUnit.equal(city.get(), null, "updated city after state set");
+    assert.equal(city.get(), null, "updated city after state set");
 
     city.set("San Jose");
 
-    QUnit.equal(city.get(), "San Jose", "updated city after state set");
+    assert.equal(city.get(), "San Jose", "updated city after state set");
 
-    QUnit.deepEqual(CITIES,[null,"San Jose"], "events right");
+    assert.deepEqual(CITIES,[null,"San Jose"], "events right");
 });
 
 QUnit.test("getValueDependencies and value dependencies", function(assert) {
@@ -222,7 +222,7 @@ QUnit.test("getWhatIChange", function(assert) {
 	assert.ok(canReflect.getWhatIChange(dep).derive.valueDependencies.has(obs));
 });
 
-QUnit.test("proactive binding doesn't last past binding (can-stache#486)", function(){
+QUnit.test("proactive binding doesn't last past binding (can-stache#486)", function(assert) {
     var v = new SimpleObservable(2);
 
     var readCount = 0;
@@ -246,11 +246,11 @@ QUnit.test("proactive binding doesn't last past binding (can-stache#486)", funct
 
     v.set(3);
 
-    QUnit.equal(readCount, 0, "internal observation only updated once");
+    assert.equal(readCount, 0, "internal observation only updated once");
 
 });
 
-QUnit.test("reading observables does not leak the observable read", function(){
+QUnit.test("reading observables does not leak the observable read", function(assert) {
     // if an observation is listening is reading this value, the value
     // should not ObservationRecorder.add its deps
     // there is a similar test in can-define
@@ -267,13 +267,13 @@ QUnit.test("reading observables does not leak the observable read", function(){
 
     var records = ObservationRecorder.stop();
 
-    QUnit.equal(records.keyDependencies.size, 0, "there are no key dependencies");
-    QUnit.equal(records.valueDependencies.size, 0, "there are no valueDependencies");
+    assert.equal(records.keyDependencies.size, 0, "there are no key dependencies");
+    assert.equal(records.valueDependencies.size, 0, "there are no valueDependencies");
 });
 
-QUnit.test("initial value on lastSet can be set (can-define#397)", function () {
+QUnit.test("initial value on lastSet can be set (can-define#397)", function(assert) {
     var defaulted = new ResolverObservable(function(props) {
-        QUnit.equal(props.lastSet.get(), 5, "observable has default value");
+        assert.equal(props.lastSet.get(), 5, "observable has default value");
     }, {}, 5);
     defaulted.get();
 });

@@ -50,7 +50,7 @@ if (supportsFunctionNames) {
 	onlyDevTest("observable has a helpful name", function() {
 		var outer = {inner: {key: "hello"}};
 		var observable = keyObservable(outer, "inner.key");
-		QUnit.equal(
+		assert.equal(
 			canReflect.getName(observable),
 			"keyObservable<Object{}.inner.key>",
 			"observable has the correct name"
