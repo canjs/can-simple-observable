@@ -5,7 +5,8 @@ var makeCompute = require("./make-compute");
 
 QUnit.module('can-simple-observable/make-compute');
 
-QUnit.test('basics', 4, function(assert) {
+QUnit.test('basics', function(assert) {
+    assert.expect(4);
     var compute = makeCompute(new SimpleObservable(5));
     assert.equal( compute(), 5, "read");
     compute(6);

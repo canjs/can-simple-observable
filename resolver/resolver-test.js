@@ -50,7 +50,8 @@ QUnit.test("timer with teardown", function(assert) {
 
 });
 var queues = require("can-queues");
-QUnit.test('basics listenTo', 14, function(assert){
+QUnit.test('basics listenTo', function(assert){
+    assert.expect(14);
     var number = new SimpleObservable(1);
 
     var map = mapEventMixin({
@@ -86,7 +87,8 @@ QUnit.test('basics listenTo', 14, function(assert){
     assert.equal(canReflect.getValue(obs), 5, "got updated value");
 });
 
-QUnit.test("setter", 6, function(assert) {
+QUnit.test("setter",function(assert) {
+    assert.expect(6);
     var state = new SimpleObservable("IL");
 
     var city = new ResolverObservable(function fullName(value){

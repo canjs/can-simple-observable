@@ -47,7 +47,7 @@ QUnit.test("get and set Priority", function(assert) {
 });
 
 if (supportsFunctionNames) {
-	onlyDevTest("observable has a helpful name", function() {
+	onlyDevTest("observable has a helpful name", function(assert) {
 		var outer = {inner: {key: "hello"}};
 		var observable = keyObservable(outer, "inner.key");
 		assert.equal(
