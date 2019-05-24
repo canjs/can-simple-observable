@@ -10,20 +10,20 @@ var skipProduction = steal.isEnv("production") ? QUnit.skip : QUnit.test;
 
 QUnit.module('can-simple-observable');
 
-QUnit.test('basics', function(){
-    expect(5);
+QUnit.test('basics', function(assert) {
+    assert.expect(5);
     var obs = new SimpleObservable('one');
 
-    QUnit.equal(canReflect.getValue(obs), 'one', 'getValue');
+    assert.equal(canReflect.getValue(obs), 'one', 'getValue');
 
     canReflect.setValue(obs, 'two');
     ObservationRecorder.start();
-    QUnit.equal(canReflect.getValue(obs), 'two', 'setValue');
+    assert.equal(canReflect.getValue(obs), 'two', 'setValue');
     var dependencies = ObservationRecorder.stop();
-    QUnit.ok(dependencies.valueDependencies.has(obs), "was recorded");
+    assert.ok(dependencies.valueDependencies.has(obs), "was recorded");
 
     var handler = function(newValue) {
-        QUnit.equal(newValue, 'three', 'onValue');
+        assert.equal(newValue, 'three', 'onValue');
     };
     canReflect.onValue(obs, handler);
     canReflect.setValue(obs, 'three');
@@ -31,23 +31,23 @@ QUnit.test('basics', function(){
     canReflect.offValue(obs, handler);
     canReflect.setValue(obs, 'four');
 
-    QUnit.equal(canReflect.getValue(obs), 'four', 'getValue after offValue');
+    assert.equal(canReflect.getValue(obs), 'four', 'getValue after offValue');
 });
 
-QUnit.test('basics with .value', function(){
-    expect(5);
+QUnit.test('basics with .value', function(assert) {
+    assert.expect(5);
     var obs = new SimpleObservable('one');
 	
-    QUnit.equal(obs.value, 'one', 'getValue');
+    assert.equal(obs.value, 'one', 'getValue');
 
     obs.value = 'two';
     ObservationRecorder.start();
-    QUnit.equal(obs.value, 'two', 'setValue');
+    assert.equal(obs.value, 'two', 'setValue');
     var dependencies = ObservationRecorder.stop();
-    QUnit.ok(dependencies.valueDependencies.has(obs), "was recorded");
+    assert.ok(dependencies.valueDependencies.has(obs), "was recorded");
 
     var handler = function(newValue) {
-        QUnit.equal(newValue, 'three', 'onValue');
+        assert.equal(newValue, 'three', 'onValue');
     };
     canReflect.onValue(obs, handler);
     obs.value = 'three';
@@ -55,7 +55,7 @@ QUnit.test('basics with .value', function(){
     canReflect.offValue(obs, handler);
     obs.value = 'four';
 
-    QUnit.equal(obs.value, 'four', 'getValue after offValue');
+    assert.equal(obs.value, 'four', 'getValue after offValue');
 });
 
 skipProduction("log observable changes", function(assert) {
