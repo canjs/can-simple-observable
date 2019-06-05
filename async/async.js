@@ -85,6 +85,13 @@ AsyncObservable.prototype.activate = function() {
 };
 
 AsyncObservable.prototype.resolve = function resolve(newVal) {
+	if(canReflect.isPromise(newVal)) {
+		newVal.then(function(resolvedValue){
+			this.resolve(resolvedValue);
+		}.bind(this));
+		return;
+	}
+
 	this.resolveCalled = true;
 	var old = this._value;
 	this._value = newVal;

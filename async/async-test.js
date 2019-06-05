@@ -306,3 +306,15 @@ QUnit.test("proactive binding doesn't last past binding (can-stache#486)", funct
     assert.equal(readCount, 1, "internal observation only updated once");
 
 });
+
+QUnit.test("Returning a promise is a way to resolve", function(assert) {
+	var done = assert.async();
+	var obs = new AsyncObservable(function(lastSet, resolve){
+			return Promise.resolve("works");
+	});
+
+	canReflect.onValue(obs, function(value) {
+		assert.equal(value, "works", "it resolved");
+		done();
+	});
+});
