@@ -2,6 +2,8 @@ var QUnit = require('steal-qunit');
 var SetterObservable = require('./setter');
 var SimpleObservable = require('../can-simple-observable');
 var canReflect = require('can-reflect');
+var Observation = require("can-observation");
+var canSymbol = require("can-symbol");
 
 QUnit.module('can-simple-observable/setter');
 
@@ -110,4 +112,19 @@ QUnit.test("getValueDependencies", function(assert) {
 		canReflect.getValueDependencies(obs).valueDependencies,
 		new Set([value])
 	);
+});
+
+QUnit.test("has setElement Symbol", function(assert) {
+	var setElementSymbol = canSymbol.for("can.setElement");
+	var setterObservable = new SetterObservable();
+	var obs = new Observation();
+	var el = {};
+	obs[setElementSymbol] = function(passedEl) {
+		assert.ok(true, "underlying observation's setElement Symbol is called");
+		assert.equal(passedEl, el, "observation's setElement is passed element");
+	};
+
+	setterObservable.observation = obs;
+
+	setterObservable[setElementSymbol](el);
 });
