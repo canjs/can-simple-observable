@@ -261,7 +261,7 @@ QUnit.test("reading observables does not leak the observable read", function(ass
 
     var obs = new ResolverObservable(function(value) {
         value.resolve( canReflect.getValue(v));
-	});
+    });
 
     ObservationRecorder.start();
 
@@ -278,4 +278,25 @@ QUnit.test("initial value on lastSet can be set (can-define#397)", function(asse
         assert.equal(props.lastSet.get(), 5, "observable has default value");
     }, {}, 5);
     defaulted.get();
+});
+
+QUnit.test("value is reset when property is unbound if resetUnboundValueInGet===true", function(assert) {
+	var v = new SimpleObservable(2);
+
+	var obs = new ResolverObservable(function(value) {
+		value.listenTo(v, function(newVal) {
+			value.resolve(newVal);
+		});
+	}, {}, undefined, { resetUnboundValueInGet: true });
+
+	obs.on(function() {});
+
+	assert.equal(obs.value, undefined, "value defaults to undefined");
+
+	v.value = 5;
+	assert.equal(obs.value, 5, "value set to 5");
+
+	obs.off();
+
+	assert.equal(obs.value, undefined, "value reset to undefined");
 });
