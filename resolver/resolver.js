@@ -9,8 +9,9 @@ var SettableObservable = require("../settable/settable");
 var SimpleObservable = require("../can-simple-observable");
 
 var getChangesSymbol = canSymbol.for("can.getChangesDependencyRecord");
+var metaSymbol = canSymbol.for("can.meta");
 
-function ResolverObservable(resolver, context, initialValue) {
+function ResolverObservable(resolver, context, initialValue, options) {
 	// we don't want reads leaking out.  We should be binding to all of this ourselves.
 	this.resolver = ObservationRecorder.ignore(resolver);
 	this.context = context;
@@ -55,6 +56,8 @@ function ResolverObservable(resolver, context, initialValue) {
 		});
 	}
 	//!steal-remove-end
+
+	this[metaSymbol] = canReflect.assignMap({}, options);
 }
 ResolverObservable.prototype = Object.create(SettableObservable.prototype);
 
@@ -205,6 +208,10 @@ canReflect.assignMap(ResolverObservable.prototype, {
 		if (this.bound === true) {
 			return this._value;
 		} else {
+			if (this[metaSymbol].resetUnboundValueInGet) {
+				this._value = undefined;
+			}
+
 			var handler = function(){};
 			this.on(handler);
 			var val = this._value;
@@ -216,7 +223,7 @@ canReflect.assignMap(ResolverObservable.prototype, {
 		var hasDependencies = false;
 
 		if (this.bound) {
-			var meta = this.binder[canSymbol.for("can.meta")];
+			var meta = this.binder[metaSymbol];
 			var listenHandlers = meta && meta.listenHandlers;
 			hasDependencies = !!listenHandlers.size();
 		}
