@@ -1,4 +1,5 @@
 "use strict";
+//!steal-remove-start
 var dev = require("can-log/dev/dev");
 var canReflect = require("can-reflect");
 
@@ -13,6 +14,7 @@ function quoteString(x) {
 //	   `Observable.propotype.log = log`
 // b.- Make sure `._log` is called by the observable when mutation happens
 //     `_.log` should be passed the current value and the value before the mutation
+//!steal-remove-end
 module.exports = function log() {
 	//!steal-remove-start
 	if (process.env.NODE_ENV !== 'production') {
