@@ -37,7 +37,7 @@
     ]
   },
   "dependencies": {
-    "can-event-queue": "^1.0.0",
+    "can-event-queue": "1.1.7",
     "can-key": "<2.0.0",
     "can-key-tree": "^1.0.0",
     "can-log": "^1.0.0",
